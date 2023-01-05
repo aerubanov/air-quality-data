@@ -41,6 +41,10 @@ class FTPLoader:
         print(len(self.index))
 
     def _check_and_scan_deeper(self, link: str) -> Optional[str]:
+        """
+        download list of links for single date, save it into file and
+        upload to s3
+        """
         if not self._check_link(link):
             print(f"skip {link}")
             return
@@ -67,6 +71,7 @@ class FTPLoader:
               
 
     def _check_link(self, link: str) -> bool:
+        "check link format and if file already exist on s3"
         if not self.link_pattern.match(link):
             return False
         file = self.index_folder + link[:-1] + '.txt'
