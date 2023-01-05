@@ -1,12 +1,11 @@
-AWSTemplateFormatVersion:	"2010-09-09"
-Description:	"AWS CloudFormation Template to create resources for ETL pipline."
-
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template to create resources for ETL pipline.
 Resources:
   S3BucketStaging:
-    Type: "AWS::S3::Bucket"
+    Type: AWS::S3::Bucket
     Properties:
-      BucketName: "staging-area"
-      AccessControl: "Private"
+      BucketName: staging-area-bucket
+      AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
