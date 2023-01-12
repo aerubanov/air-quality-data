@@ -19,12 +19,12 @@ s3 = boto3.client(
 bucket = config['bucket_name']
 
 
-class FTPLoader:
+class FileIndexer:
 
     def __init__(self) -> None:
         self.base_url = "https://archive.sensor.community/"
         self.link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
-        self.index_folder = 'file_index/'
+        self.index_folder = 'file_index/new/'
         self.data_dir = 'data/'
         if not os.path.exists(self.data_dir):
             os.mkdir(self.data_dir)
@@ -87,10 +87,7 @@ class FTPLoader:
                 raise
         return True
 
-    def load_data(self):
-        raise NotImplementedError
-
 
 if __name__ == "__main__":
-    loader = FTPLoader()
-    loader.build_index()
+    indexer = FileIndexer()
+    indexer.build_index()
