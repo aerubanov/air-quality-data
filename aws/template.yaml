@@ -12,10 +12,26 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
     DeletionPolicy: Retain
+  
+  Indexer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Build file index to upload files from FTP server 
+      Architectures: 
+        - x86x64
+      Code: 
+        Code
+      MemorySize: 512
+      PackageType: Image
+      Role: String
+      Runtime: python3.9
+      Timeout: 60
 
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
     Description: Name of the staging ares s3 bucket.
+
+
 
       

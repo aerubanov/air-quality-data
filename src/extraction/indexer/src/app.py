@@ -5,18 +5,19 @@ import os
 from multiprocessing.pool import ThreadPool
 import boto3
 import botocore
-import json
 from typing import Optional
+# import json
 
-with open("config.json", "r") as cf:
-    config = json.load(cf)
+#with open("config.json", "r") as cf:
+#    config = json.load(cf)
 
 s3 = boto3.client(
     service_name='s3',
-	aws_access_key_id=config['aws_access_key_id'],
-	aws_secret_access_key=config['aws_secret_access_key'],
+	#aws_access_key_id=config['aws_access_key_id'],
+	#aws_secret_access_key=config['aws_secret_access_key'],
     )
-bucket = config['bucket_name']
+#bucket = config['bucket_name']
+bucket = "staging-area-bucket"
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
@@ -24,6 +25,9 @@ index_folder = 'file_index/new/'
 data_dir = '/tmp/data/'
 if not os.path.exists(data_dir):
     os.mkdir(data_dir)
+
+def handler(event, context):
+    build_index()
 
 def build_index():
     """Collect file index and upload it on S3. Using multithreading"""
