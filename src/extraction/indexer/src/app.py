@@ -6,6 +6,7 @@ from multiprocessing.pool import ThreadPool
 import boto3
 import botocore
 from typing import Optional
+import time
 # import json
 
 #with open("config.json", "r") as cf:
@@ -34,7 +35,7 @@ def build_index():
     resp = httpx.get(base_url)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a')]
-    pool = ThreadPool(processes=10)
+    pool = ThreadPool(processes=5)
     for result in pool.map(check_and_scan_deeper, links):
         if result:
             print(f"{result} downloaded")
@@ -49,7 +50,13 @@ def check_and_scan_deeper(link: str) -> Optional[str]:
 
     print(f"downloading {link}")
     url = base_url + link
-    resp = httpx.get(url)
+    try:
+        resp = httpx.get(url)
+    except httpx.TimeoutException:
+        print(f"can`t load {link}")
+        time.sleep(10)
+        resp = httpx.get(url)
+        
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
     files = [url+item for item in links if '.csv' in item]
@@ -66,6 +73,8 @@ def check_and_scan_deeper(link: str) -> Optional[str]:
         print(e)
     finally:
         os.remove(data_file)
+    time.sleep(2)
+
               
 
 def check_link(link: str) -> bool:
