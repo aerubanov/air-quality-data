@@ -17,16 +17,13 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: Build file index to upload files from FTP server
-      FunctionName: indexer:v0.0.1
-      Architectures: 
-        - x86x64
+      FunctionName: indexer-v-0-0-1
       Code: 
-        Code
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/indexer:latest
       MemorySize: 512
       PackageType: Image
-      Role: String
-      Runtime: python3.9
-      Timeout: 60
+      Role: !GetAtt 'IndexerRole.Arn'
+      Timeout: 900
 
   IndexerRole:      
     Type: AWS::IAM::Role
@@ -38,8 +35,8 @@ Resources:
           Principal:
             Service: 
              - lambda.amazonaws.com
-            Action: 
-              - sts:AssumeRole
+          Action: 
+              - 'sts:AssumeRole'
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
