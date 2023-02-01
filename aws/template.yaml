@@ -43,6 +43,18 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonS3ObjectLambdaExecutionRolePolicy
       RoleName: IndexerRole
 
+  EventRule0:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Schedule for indexer aws lambda
+      EventBusName: default
+      Name: indexer-schedule
+      ScheduleExpression: rate(24 hours)
+      State: ENABLED
+      Targets:
+        - Id: Id83555565-723e-46d3-b5b5-39af9f7b23c7
+          Arn: arn:aws:lambda:eu-central-1:307660119800:function:indexer-v-0-0-1
+
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
