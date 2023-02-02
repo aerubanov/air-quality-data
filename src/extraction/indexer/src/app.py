@@ -2,7 +2,7 @@ import httpx
 from bs4 import BeautifulSoup
 import re
 import os
-from multiprocessing.pool import ThreadPool
+from threading import Thread
 import boto3
 import botocore
 from typing import Optional
@@ -35,14 +35,24 @@ def build_index():
     resp = httpx.get(base_url, headers=headers)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a')]
-    with ThreadPool(10) as p:
-        booleans = p.map(check_link, links)
-        links = [x for x, b in zip(links, booleans) if b]
+    # multiprocessing.ThreadPool is not working in AWS Lambda
+    # https://aws.amazon.com/blogs/compute/parallel-processing-in-python-with-aws-lambda/
+    #with ThreadPool(10) as p:
+    #    booleans = p.map(check_link, links)
+    booleans = process_in_threads(links, check_link, n_threads=10)
+    links = [x for x, b in zip(links, booleans) if b]
+    print(len(links))
+    if len(links) == 0:
+        print("Index is up to date, nothing to download")
+        return
     cnt = 0
-    with ThreadPool(10) as pool:
-        for result in pool.map(scan_deeper, links):
-            if result:
-                cnt += 1
+    #with ThreadPool(10) as pool:
+    #    for result in pool.map(scan_deeper, links):
+    #        if result:
+    #            cnt += 1
+    for result in process_in_threads(links, scan_deeper, n_threads=min(10, len(links))):
+        if result:
+            cnt += 1
     print(f"Downloaded {cnt} items")
 
 def scan_deeper(link: str) -> Optional[str]:
@@ -99,6 +109,30 @@ def check_link(link: str) -> bool:
             # Something else has gone wrong.
             raise
     return True
+
+
+def job(func, data):
+    for i, item in enumerate(data):
+        data[i] = func(item)
+
+
+def process_in_threads(data: list, func: callable, n_threads: int) -> list:
+    if n_threads > 1:
+        chunk_size = round(len(data)/n_threads)
+        chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
+    else:
+        chunks = [data]
+    threads = [None for i in range(n_threads)]
+
+    for i in range(n_threads):
+        threads[i] = Thread(target=job, args=(func, chunks[i]))
+        threads[i].start()
+
+    for i in range(n_threads):
+        threads[i].join()
+
+    return [item for sublist in chunks for item in sublist]
+
 
 
 if __name__ == "__main__":
