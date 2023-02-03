@@ -23,7 +23,7 @@ Resources:
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'IndexerRole.Arn'
-      Timeout: 900
+      Timeout: 600
 
   IndexerRole:      
     Type: AWS::IAM::Role
@@ -31,22 +31,37 @@ Resources:
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement:
-          Effect: Allow
-          Principal:
-            Service: 
-             - lambda.amazonaws.com
-          Action: 
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
               - 'sts:AssumeRole'
       Path: /
+      Policies:
+        - PolicyName: S3write
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "ListObjectsInBucket"
+                Effect: Allow
+                Action: 
+                  - 's3:ListBucket'
+                Resource: 
+                  - 'arn:aws:s3:::staging-area-bucket'
+              - Sid: "AllObjectActions"
+                Effect: Allow
+                Action: 
+                  - 's3:*Object'
+                Resource: 
+                  - 'arn:aws:s3:::staging-area-bucket/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AmazonS3ObjectLambdaExecutionRolePolicy
       RoleName: IndexerRole
 
   EventRule0:
     Type: AWS::Events::Rule
     Properties:
-      Description: Schedule for indexer aws lambda
       EventBusName: default
       Name: indexer-schedule
       ScheduleExpression: rate(24 hours)
