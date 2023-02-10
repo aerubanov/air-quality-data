@@ -9,7 +9,7 @@ from typing import Optional
 import time
 
 s3 = boto3.client(service_name='s3')
-bucket = "staging-area-bucket"
+bucket = "staging-area-bucket" #TODO: get from env var
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
