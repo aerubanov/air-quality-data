@@ -8,7 +8,20 @@ import botocore
 from typing import Optional
 import time
 
-db = boto3.client(service_name='dynamodb')
+#db = boto3.client(service_name='dynamodb')
+dynamodb = boto3.resource('dynamodb')
+folders_table = dynamodb.Table('folders')
+files_table = dynamodb.Table('files')
+
+
+def get_folders_list():
+    response = folders_table.scan()
+    data = response['Items']
+
+    while 'LastEvaluatedKey' in response:
+        response = folders_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        data.extend(response['Items'])
+    return [item["folder"] for item in data]
 
 
 base_url = "https://archive.sensor.community/"
@@ -35,12 +48,14 @@ def build_index():
     resp = httpx.get(base_url, headers=headers)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a')]
+    checked_folders=set(get_folders_list())
     # multiprocessing.ThreadPool is not working in AWS Lambda
     # https://aws.amazon.com/blogs/compute/parallel-processing-in-python-with-aws-lambda/
     #with ThreadPool(10) as p:
     #    booleans = p.map(check_link, links)
-    booleans = process_in_threads(links, check_link, n_threads=10)
-    links = [x for x, b in zip(links, booleans) if b]
+    #booleans = process_in_threads(links, check_link, n_threads=10)
+    #links = [x for x, b in zip(links, booleans) if b]
+    links = [i for i in links if i not in checked_folders]
     print(len(links))
     if len(links) == 0:
         print("Index is up to date, nothing to download")
@@ -50,7 +65,7 @@ def build_index():
     #    for result in pool.map(scan_deeper, links):
     #        if result:
     #            cnt += 1
-    for result in process_in_threads(links, scan_deeper, n_threads=min(10, len(links))):
+    for result in process_in_threads(links, scan_deeper, n_threads=min(1, len(links))):
         if result:
             cnt += 1
     print(f"Downloaded {cnt} items")
@@ -59,6 +74,9 @@ def scan_deeper(link: str) -> Optional[str]:
     """
     download list of links for single date, save it into file and upload to s3
     """
+    if not check_link(link):
+        return
+
     print(f"downloading {link}")
     url = base_url + link
     try:
@@ -80,14 +98,15 @@ def scan_deeper(link: str) -> Optional[str]:
     #with open(data_file, "w") as f:
     #    for line in files:
     #        f.write(line+'\n')
-    for file in files:
-        item = {
-            "filename": {"S": file},
-            "folder": {"S": link},
-            "link": {"S": url+file},
-            "processed": {"BOOL": False},
-        }
-        db.put_item(TableName="files", Item=item)
+    with files_table.batch_writer() as batch:
+        for file in files:
+            item = {
+                "filename": file,
+                "folder": link,
+                "link": url+file,
+                "processed": False,
+            }
+            batch.put_item(Item=item)
 
     #try:
     #    s3.upload_file(data_file, bucket, data_object)
@@ -98,10 +117,11 @@ def scan_deeper(link: str) -> Optional[str]:
     #finally:
     #    os.remove(data_file)
     item = {
-        "folder": {"S": link},
-        "processed": {"BOOL": False},
+        "folder": link,
+        "processed": False,
         }
-    db.put_item(TableName="folders", Item=item)
+    folders_table.put_item(Item=item)
+    print(f"compleated: {link}")
     
 
 def check_link(link: str) -> bool:
@@ -122,10 +142,10 @@ def check_link(link: str) -> bool:
     #         # Something else has gone wrong.
     #         raise
     # return True
-    resp = db.get_item(Key={"folder": {"S": link}}, TableName="folders")
-    if "Item" in resp:
-        print(f"skip {link}")
-        return False # We alredy added this folder to index
+    #resp = db.get_item(Key={"folder": {"S": link}}, TableName="folders")
+    #if "Item" in resp:
+    #    print(f"skip {link}")
+    #    return False # We alredy added this folder to index
     
     return True
 
@@ -155,10 +175,5 @@ def process_in_threads(data: list, func: callable, n_threads: int) -> list:
 
 
 if __name__ == "__main__":
-    #build_index()
-    item = {
-        "folder": {"S": "test"},
-        "processed": {"BOOL": False},
-        }
-    db.put_item(TableName="folders", Item=item)
-    print(db.get_item(Key={"folder": {"S": "test"}}, TableName="folders"))
+    build_index()
+    #print(get_folders_list())
