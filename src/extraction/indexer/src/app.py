@@ -8,8 +8,8 @@ import botocore
 from typing import Optional
 import time
 
-s3 = boto3.client(service_name='s3')
-bucket = "staging-area-bucket" #TODO: get from env var
+db = boto3.client(service_name='dynamodb')
+
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
@@ -74,21 +74,34 @@ def scan_deeper(link: str) -> Optional[str]:
         
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
-    files = [url+item for item in links if '.csv' in item]
+    files = [item for item in links if '.csv' in item]
     data_file = data_dir + link[:-1] + '.txt'
     data_object = index_folder + link[:-1] + '.txt'
-    with open(data_file, "w") as f:
-        for line in files:
-            f.write(line+'\n')
+    #with open(data_file, "w") as f:
+    #    for line in files:
+    #        f.write(line+'\n')
+    for file in files:
+        item = {
+            "filename": {"S": file},
+            "folder": {"S": link},
+            "link": {"S": url+file},
+            "processed": {"BOOL": False},
+        }
+        db.put_item(TableName="files", Item=item)
 
-    try:
-        s3.upload_file(data_file, bucket, data_object)
-        print(f"compleated: {link}")
-        return data_object        
-    except botocore.exceptions.ClientError as e:
-        print(e)
-    finally:
-        os.remove(data_file)
+    #try:
+    #    s3.upload_file(data_file, bucket, data_object)
+    #    print(f"compleated: {link}")
+    #    return data_object        
+    #except botocore.exceptions.ClientError as e:
+    #    print(e)
+    #finally:
+    #    os.remove(data_file)
+    item = {
+        "folder": {"S": link},
+        "processed": {"BOOL": False},
+        }
+    db.put_item(TableName="folders", Item=item)
     
 
 def check_link(link: str) -> bool:
@@ -96,18 +109,24 @@ def check_link(link: str) -> bool:
     if not link_pattern.match(link):
         print(f"skip {link}")
         return False
-    file = index_folder + link[:-1] + '.txt'
-    try:
-        s3.head_object(Bucket=bucket, Key=file)
+    # file = index_folder + link[:-1] + '.txt'
+    # try:
+    #     s3.head_object(Bucket=bucket, Key=file)
+    #     print(f"skip {link}")
+    #     return False # file already exist
+    # except botocore.exceptions.ClientError as e:
+    #     if e.response['Error']['Code'] == "404":
+    #         # The object does not exist.
+    #         pass
+    #     else:
+    #         # Something else has gone wrong.
+    #         raise
+    # return True
+    resp = db.get_item(Key={"folder": {"S": link}}, TableName="folders")
+    if "Item" in resp:
         print(f"skip {link}")
-        return False # file already exist
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] == "404":
-            # The object does not exist.
-            pass
-        else:
-            # Something else has gone wrong.
-            raise
+        return False # We alredy added this folder to index
+    
     return True
 
 
@@ -136,4 +155,10 @@ def process_in_threads(data: list, func: callable, n_threads: int) -> list:
 
 
 if __name__ == "__main__":
-    build_index()
+    #build_index()
+    item = {
+        "folder": {"S": "test"},
+        "processed": {"BOOL": False},
+        }
+    db.put_item(TableName="folders", Item=item)
+    print(db.get_item(Key={"folder": {"S": "test"}}, TableName="folders"))

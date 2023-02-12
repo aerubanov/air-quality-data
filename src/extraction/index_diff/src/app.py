@@ -5,7 +5,7 @@ bucket = "staging-area-bucket" #TODO: get from env var
 
 
 def handler(event, context):
-    pass
+    raise NotImplementedError
 
 
 def index_diff() -> list:
