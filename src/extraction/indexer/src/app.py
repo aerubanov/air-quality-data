@@ -65,9 +65,12 @@ def build_index():
     #    for result in pool.map(scan_deeper, links):
     #        if result:
     #            cnt += 1
-    for result in process_in_threads(links, scan_deeper, n_threads=min(1, len(links))):
-        if result:
-            cnt += 1
+    #for result in process_in_threads(links, scan_deeper, n_threads=min(1, len(links))):
+    #    if result:
+    #        cnt += 1
+    for i in links:
+        scan_deeper(i)
+        cnt += 1
     print(f"Downloaded {cnt} items")
 
 def scan_deeper(link: str) -> Optional[str]:
@@ -150,27 +153,27 @@ def check_link(link: str) -> bool:
     return True
 
 
-def job(func, data):
-    for i, item in enumerate(data):
-        data[i] = func(item)
+# def job(func, data):
+#     for i, item in enumerate(data):
+#         data[i] = func(item)
 
 
-def process_in_threads(data: list, func: callable, n_threads: int) -> list:
-    if n_threads > 1:
-        chunk_size = round(len(data)/n_threads)
-        chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
-    else:
-        chunks = [data]
-    threads = [None for i in range(n_threads)]
+# def process_in_threads(data: list, func: callable, n_threads: int) -> list:
+#     if n_threads > 1:
+#         chunk_size = round(len(data)/n_threads)
+#         chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
+#     else:
+#         chunks = [data]
+#     threads = [None for i in range(n_threads)]
 
-    for i in range(n_threads):
-        threads[i] = Thread(target=job, args=(func, chunks[i]))
-        threads[i].start()
+#     for i in range(n_threads):
+#         threads[i] = Thread(target=job, args=(func, chunks[i]))
+#         threads[i].start()
 
-    for i in range(n_threads):
-        threads[i].join()
+#     for i in range(n_threads):
+#         threads[i].join()
 
-    return [item for sublist in chunks for item in sublist]
+#     return [item for sublist in chunks for item in sublist]
 
 
 
