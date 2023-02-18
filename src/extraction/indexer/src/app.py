@@ -5,24 +5,14 @@ import os
 import boto3
 from typing import Optional
 import time
+import datetime
 
 dynamodb = boto3.resource('dynamodb')
 folders_table = dynamodb.Table('folders')
-files_table = dynamodb.Table('files')
-
-
-def get_folders_list():
-    response = folders_table.scan()
-    data = response['Items']
-
-    while 'LastEvaluatedKey' in response:
-        response = folders_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        data.extend(response['Items'])
-    return [item["folder"] for item in data]
-
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
+first_date = datetime.date(2015, 10, 1)
 
 headers = {
     "Host": "archive.sensor.community",
@@ -36,6 +26,17 @@ headers = {
 def handler(event, context):
     build_index()
 
+
+def get_folders_list():
+    response = folders_table.scan()
+    data = response['Items']
+
+    while 'LastEvaluatedKey' in response:
+        response = folders_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        data.extend(response['Items'])
+    return [item["folder"] for item in data]
+
+
 def build_index():
     """Collect file index and upload it on S3. Using multithreading"""
     resp = httpx.get(base_url, headers=headers)
@@ -43,61 +44,23 @@ def build_index():
     links = [link.get('href') for link in soup.find_all('a')]
     checked_folders=set(get_folders_list())
     links = [i for i in links if i not in checked_folders]
-    print(len(links))
+    print(f"{len(links)} new links")
     if len(links) == 0:
         print("Index is up to date, nothing to download")
         return
-    cnt = 0
-    for i in links:
-        scan_deeper(i)
-        cnt += 1
-    print(f"Downloaded {cnt} items")
+    with folders_table.batch_writer() as batch:
+        for link in links:
+            if check_link(link):
+                item = {
+                    "folder": link,
+                    "processed": False,
+                }
+                batch.put_item(Item=item)
 
-def scan_deeper(link: str) -> Optional[str]:
-    """
-    download list of links for single date, save it into file and upload to s3
-    """
-    if not check_link(link):
-        return
-
-    print(f"downloading {link}")
-    url = base_url + link
-    try:
-        resp = httpx.get(url, headers=headers, timeout=60)
-    except httpx.TimeoutException:
-        print(f"can`t load {link}")
-        time.sleep(10)
-        try:
-            resp = httpx.get(url, headers=headers, timeout=120)
-        except httpx.TimeoutException:
-            print (f"retry fail: {link}")
-            return
-        
-    soup = BeautifulSoup(resp.text, 'lxml')
-    links = [item.get('href') for item in soup.find_all('a')]
-    files = [item for item in links if '.csv' in item]
-    with files_table.batch_writer() as batch:
-        for file in files:
-            item = {
-                "filename": file,
-                "folder": link,
-                "link": url+file,
-                "processed": False,
-            }
-            batch.put_item(Item=item)
-
-    item = {
-        "folder": link,
-        "processed": False,
-        }
-    folders_table.put_item(Item=item)
-    print(f"compleated: {link}")
-    
 
 def check_link(link: str) -> bool:
-    "check link format and if file already exist on s3"
+    "check link format"
     if not link_pattern.match(link):
-        print(f"skip {link}")
         return False
 
     return True
