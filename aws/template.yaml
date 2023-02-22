@@ -22,10 +22,32 @@ Resources:
         ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/indexer:latest
       MemorySize: 512
       PackageType: Image
-      Role: !GetAtt 'IndexerRole.Arn'
+      Role: !GetAtt 'DynaomoDBLambdaRole.Arn'
       Timeout: 600
 
-  IndexerRole:      
+  ListFiles:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: list-files-v-0-0-1
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/list-files:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'SimpleLambdaRole.Arn'
+      Timeout: 600
+
+  Loader:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: loader-v-0-0-1
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/loader:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
+  S3LambdaRole:      
     Type: AWS::IAM::Role
     Properties: 
       AssumeRolePolicyDocument: 
@@ -57,7 +79,55 @@ Resources:
                   - 'arn:aws:s3:::staging-area-bucket/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      RoleName: IndexerRole
+      RoleName: S3LambdaRole
+
+  DynamoDBLambdaRole:      
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: DynamoDBwrite
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:BatchGetItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:BatchWriteItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:UpdateItem'
+                Resource: 'arn:aws:dynamodb:eu-central-1:307660119800:table/folders'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName: DynamoDBLambdaRole
+
+  SimpleLambdaRole:      
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   EventRule0:
     Type: AWS::Events::Rule

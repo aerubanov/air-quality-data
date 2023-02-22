@@ -16,31 +16,10 @@ if not os.path.exists(data_dir):
 
 
 def handler(event, context):
-    raise NotImplementedError
-
-
-def process_index_file(filename: str):
-    data_object = index_folder + filename
-    print(f"processing {data_object}")
-    path = data_dir + filename
-    with open(path, 'wb') as fp:
-        s3.download_fileobj(bucket, data_object, fp)
-    
-    with open(path, "r") as f:
-        lines = f.read().split('\n')[:-1]
-    
-    os.remove(path)
-    print(f"going to download {len(lines)} files")
-    for link in lines:
-        print(link)
-        load_file(link)
-
-    s3.copy_object(
-        Bucket=bucket,
-        CopySource=data_object,
-        Key=processed_folder+filename,
-    )
-    print(f"{data_object} processed")
+    print(f"Event: {event}")
+    print(f"Context: {context}")
+    link = event["filename"]
+    load_file(link)
     
 
 def load_file(link: str):
@@ -62,28 +41,5 @@ def load_file(link: str):
     finally:
         os.remove(path)
 
-
-def job(func, data):
-    for i in data:
-        func(i)
-
-
-def process_in_threads(data: list, func: callable, n_threads: int) -> list:
-    if n_threads > 1:
-        chunk_size = round(len(data)/n_threads)
-        chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
-    else:
-        chunks = [data]
-    threads = [None for i in range(n_threads)]
-
-    for i in range(n_threads):
-        threads[i] = Thread(target=job, args=(func, chunks[i]))
-        threads[i].start()
-
-    for i in range(n_threads):
-        threads[i].join()
-
-    return [item for sublist in chunks for item in sublist]
-
 if __name__ == "__main__":
-    process_index_file("2022-05-18.txt")
+    load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")

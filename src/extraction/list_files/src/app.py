@@ -4,7 +4,7 @@ import json
 
 base_url = "https://archive.sensor.community/"
 
-def lambda_handler(event, context):
+def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
     link = event["folder"]
@@ -30,6 +30,9 @@ def list_files(link):
     return [url+file for file in files]
 
 
-if __name__ == "__main__":
-    files = list_files(link='2015-10-01/')
-    print(files)
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--folder', type=str, required=True)
+    args = parser.parse_args()
+    print(list_files(args.folder))
