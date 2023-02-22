@@ -12,10 +12,208 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
     DeletionPolicy: Retain
+  
+  Indexer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Build file index to upload files from FTP server
+      FunctionName: indexer-v-0-0-1
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/indexer:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'DynaomoDBLambdaRole.Arn'
+      Timeout: 600
+
+  ListFiles:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: list-files-v-0-0-1
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/list-files:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'SimpleLambdaRole.Arn'
+      Timeout: 600
+
+  Loader:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: loader-v-0-0-1
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/loader:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
+  S3LambdaRole:      
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: S3write
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "ListObjectsInBucket"
+                Effect: Allow
+                Action: 
+                  - 's3:ListBucket'
+                Resource: 
+                  - 'arn:aws:s3:::staging-area-bucket'
+              - Sid: "AllObjectActions"
+                Effect: Allow
+                Action: 
+                  - 's3:*Object'
+                Resource: 
+                  - 'arn:aws:s3:::staging-area-bucket/*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName: S3LambdaRole
+
+  DynamoDBLambdaRole:      
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: DynamoDBwrite
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:BatchGetItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:BatchWriteItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:UpdateItem'
+                Resource: 'arn:aws:dynamodb:eu-central-1:307660119800:table/folders'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName: DynamoDBLambdaRole
+
+  SimpleLambdaRole:      
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  EventRule0:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      Name: indexer-schedule
+      ScheduleExpression: rate(24 hours)
+      State: ENABLED
+      Targets:
+        - Id: Id83555565-723e-46d3-b5b5-39af9f7b23c7
+          Arn: arn:aws:lambda:eu-central-1:307660119800:function:indexer-v-0-0-1
+
+  # Dynamo DB index table
+  folders:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      KeySchema:
+        - AttributeName: folder
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: folder
+          AttributeType: S
+      GlobalSecondaryIndexes: []
+      BillingMode: PROVISIONED
+      TableName: folders
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  TablefoldersReadCapacityScalableTarget:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    DependsOn: folders
+    Properties:
+      ServiceNamespace: dynamodb
+      ResourceId: table/folders
+      ScalableDimension: 'dynamodb:table:ReadCapacityUnits'
+      MinCapacity: 1
+      MaxCapacity: 10
+      RoleARN: !Sub >-
+        arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+  TablefoldersReadCapacityScalingPolicy:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    DependsOn: TablefoldersReadCapacityScalableTarget
+    Properties:
+      ServiceNamespace: dynamodb
+      ResourceId: table/folders
+      ScalableDimension: 'dynamodb:table:ReadCapacityUnits'
+      PolicyName: folders-read-capacity-scaling-policy
+      PolicyType: TargetTrackingScaling
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+        ScaleOutCooldown: 60
+        ScaleInCooldown: 60
+        TargetValue: 70
+  TablefoldersWriteCapacityScalableTarget:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    DependsOn: folders
+    Properties:
+      ServiceNamespace: dynamodb
+      ResourceId: table/folders
+      ScalableDimension: 'dynamodb:table:WriteCapacityUnits'
+      MinCapacity: 1
+      MaxCapacity: 10
+      RoleARN: !Sub >-
+        arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+  TablefoldersWriteCapacityScalingPolicy:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    DependsOn: TablefoldersWriteCapacityScalableTarget
+    Properties:
+      ServiceNamespace: dynamodb
+      ResourceId: table/folders
+      ScalableDimension: 'dynamodb:table:WriteCapacityUnits'
+      PolicyName: folders-write-capacity-scaling-policy
+      PolicyType: TargetTrackingScaling
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+        ScaleOutCooldown: 60
+        ScaleInCooldown: 60
+        TargetValue: 70
 
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
     Description: Name of the staging ares s3 bucket.
+
+
 
       

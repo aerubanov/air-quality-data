@@ -4,17 +4,9 @@ import boto3
 import botocore
 import httpx
 
+s3 = boto3.client("s3")
+bucket = "staging-area-bucket" #TODO: get from env var
 
-
-with open("config.json", "r") as cf:
-    config = json.load(cf)
-
-s3 = boto3.client(
-    service_name="s3",
-    aws_access_key_id=config["aws_access_key_id"],
-    aws_secret_access_key=config["aws_secret_access_key"],
-)
-bucket = config["bucket_name"]
 index_folder = "file_index/new/"
 processed_folder = "file_index/processed/"
 files_folder = "files/new/"
@@ -22,15 +14,22 @@ data_dir = "/tmp/data/"
 if not os.path.exists(data_dir):
     os.mkdir(data_dir)
 
+
+def handler(event, context):
+    print(f"Event: {event}")
+    print(f"Context: {context}")
+    link = event["filename"]
+    load_file(link)
+    
+
 def load_file(link: str):
     """
     link like: https://archive.sensor.community/2015-10-01/2015-10-01_ppd42ns_sensor_27.csv
     """
     resp = httpx.get(link)
     data = resp.content.decode()
-    path = data_dir + link.split("/").join()
-    data_object = files_folder + link.split("/").join()
-    print(path)
+    path = data_dir + link.split("/")[-1]
+    data_object = files_folder + link.split("/")[-1]
     with open(path, 'w') as f:
         f.write(data)
     try:
@@ -38,5 +37,9 @@ def load_file(link: str):
         return data_object        
     except botocore.exceptions.ClientError as e:
         print(e)
+        raise e
     finally:
         os.remove(path)
+
+if __name__ == "__main__":
+    load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")
