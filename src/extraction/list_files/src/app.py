@@ -1,15 +1,31 @@
 import httpx
 import bs4
 import json
+import os
+import boto3
 
 base_url = "https://archive.sensor.community/"
+backet = boto3.resource("s3").Bucket("staging-area-bucket")
+folder = "file_list/"
+data_dir = "/tmp/data/"
 
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    link = event["folder"]
+    link = event["folder"]["S"]
+    print(link)
+    data_object = link[:-1]+".json"
     files = list_files(link)
-    return json({"files": files})
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+    with open(data_dir+data_object, 'w') as f:
+        json.dump(files, f)
+    backet.upload_file(data_dir+data_object, folder+data_object)
+    os.remove(data_dir+data_object)
+    return {
+        "FileListFile": folder+data_object,
+        "Bucket": "staging-area-bucket",
+        }
 
 
 def list_files(link):

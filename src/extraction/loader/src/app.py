@@ -18,8 +18,8 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    link = event["filename"]
-    load_file(link)
+    for link in event["Items"]:
+        load_file(link)
     
 
 def load_file(link: str):

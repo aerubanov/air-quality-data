@@ -1,0 +1,111 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Scan",
+  "States": {
+    "Scan": {
+      "Type": "Task",
+      "Parameters": {
+        "TableName": "folders",
+        "FilterExpression": "#attr = :value",
+        "ExpressionAttributeValues": {
+          ":value": {
+            "Bool": false
+          }
+        },
+        "ExpressionAttributeNames": {
+          "#attr": "processed"
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "Outer loop"
+    },
+    "Outer loop": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Get files list",
+        "States": {
+          "Get files list": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:list-files-v-0-0-1:$LATEST"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Inner loop"
+          },
+          "Inner loop": {
+            "Type": "Map",
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "DISTRIBUTED",
+                "ExecutionType": "EXPRESS"
+              },
+              "StartAt": "Download data",
+              "States": {
+                "Download data": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "OutputPath": "$.Payload",
+                  "Parameters": {
+                    "Payload.$": "$",
+                    "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:loader-v-0-0-1:$LATEST"
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 2,
+                      "MaxAttempts": 6,
+                      "BackoffRate": 2
+                    }
+                  ],
+                  "End": true
+                }
+              }
+            },
+            "End": true,
+            "Label": "Innerloop",
+            "MaxConcurrency": 10,
+            "ItemReader": {
+              "Resource": "arn:aws:states:::s3:getObject",
+              "ReaderConfig": {
+                "InputType": "JSON"
+              },
+              "Parameters": {
+                "Bucket.$": "$.Bucket",
+                "Key.$": "$.FileListFile"
+              }
+            },
+            "ItemBatcher": {
+              "MaxItemsPerBatch": 10
+            }
+          }
+        }
+      },
+      "End": true,
+      "MaxConcurrency": 1,
+      "ItemsPath": "$.Items"
+    }
+  }
+}
