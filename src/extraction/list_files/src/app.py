@@ -8,6 +8,14 @@ base_url = "https://archive.sensor.community/"
 backet = boto3.resource("s3").Bucket("staging-area-bucket")
 folder = "file_list/"
 data_dir = "/tmp/data/"
+headers = {
+    "Host": "archive.sensor.community",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+}
 
 def handler(event, context):
     print(f"Event: {event}")
@@ -35,10 +43,10 @@ def list_files(link):
     url = base_url + link
     # load url with retries
     try:
-        response = httpx.get(url, timeout=20)
-    except httpx.ReadTimeout:
+        response = httpx.get(url, headers=headers, timeout=20)
+    except (httpx.ReadTimeout, httpx.ConnectTimeout):
         print("Timeout")
-        response = httpx.get(url, timeout=120)
+        response = httpx.get(url, headers=headers, timeout=120)
 
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
