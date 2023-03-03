@@ -1,8 +1,8 @@
-import json
 import os
 import boto3
 import botocore
 import httpx
+from threading import Thread
 
 s3 = boto3.client("s3")
 bucket = "staging-area-bucket" #TODO: get from env var
@@ -22,12 +22,35 @@ headers = {
     "Connection": "keep-alive",
 }
 
+def job(func, data):
+    for item in data:
+        func(item)
+
+
+def process_in_threads(data: list, func: callable, n_threads: int) -> list:
+    if n_threads > 1:
+        chunk_size = round(len(data)/n_threads)
+        chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
+    else:
+        chunks = [data]
+    threads = [None for i in range(n_threads)]
+
+    for i in range(n_threads):
+        threads[i] = Thread(target=job, args=(func, chunks[i]))
+        threads[i].start()
+
+    for i in range(n_threads):
+        threads[i].join()
+
+    return [item for sublist in chunks for item in sublist]
+
 
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    for link in event["Items"]:
-        load_file(link)
+    #for link in event["Items"]:
+    #    load_file(link)
+    process_in_threads(event["Items"], load_file, 4)
     
 
 def load_file(link: str):
@@ -48,6 +71,8 @@ def load_file(link: str):
         raise e
     finally:
         os.remove(path)
+
+
 
 if __name__ == "__main__":
     load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")
