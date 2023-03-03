@@ -1,18 +1,13 @@
 import httpx
 from bs4 import BeautifulSoup
 import re
-import os
 import boto3
-from typing import Optional
-import time
-import datetime
 
 dynamodb = boto3.resource('dynamodb')
 folders_table = dynamodb.Table('folders')
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
-first_date = datetime.date(2015, 10, 1)
 
 headers = {
     "Host": "archive.sensor.community",
@@ -23,7 +18,18 @@ headers = {
     "Connection": "keep-alive",
 }
 
+nested_folders = [
+    "2015/",
+    "2016/",
+    "2017/",
+    "2018/",
+    "2019/",
+]
+
+
 def handler(event, context):
+    print(f"Event: {event}")
+    print(f"Context: {context}")
     build_index()
 
 
@@ -39,15 +45,21 @@ def get_folders_list():
 
 def build_index():
     """Collect file index and upload it on S3. Using multithreading"""
-    resp = httpx.get(base_url, headers=headers)
+    resp = httpx.get(base_url, headers=headers, timeout=120)
     soup = BeautifulSoup(resp.text, 'lxml')
-    links = [link.get('href') for link in soup.find_all('a')]
+    links = [link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))]
+    for folder in nested_folders:
+        resp = httpx.get(base_url + folder, headers=headers, timeout=120)
+        print(resp)
+        soup = BeautifulSoup(resp.text, 'lxml')
+        links.extend([folder+link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))])
     checked_folders=set(get_folders_list())
     links = [i for i in links if i not in checked_folders]
     print(f"{len(links)} new links")
     if len(links) == 0:
         print("Index is up to date, nothing to download")
         return
+    print(links)
     with folders_table.batch_writer() as batch:
         for link in links:
             if check_link(link):

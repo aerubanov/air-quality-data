@@ -1,0 +1,19 @@
+{
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "folder",
+      "AttributeType": "S"
+    }
+  ],
+  "TableName": "folders",
+  "KeySchema": [
+    {
+      "AttributeName": "folder",
+      "KeyType": "HASH"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
