@@ -58,7 +58,7 @@ Resources:
         ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/index-marker:latest
       MemorySize: 512
       PackageType: Image
-      Role: !GetAtt 'DynamoDBLambdaRole.Arn'
+      Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
       Timeout: 600
 
   S3LambdaRole:      

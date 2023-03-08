@@ -50,14 +50,14 @@ def handler(event, context):
     print(f"Context: {context}")
     #for link in event["Items"]:
     #    load_file(link)
-    process_in_threads(event["Items"], load_file, 4)
+    process_in_threads(event["Items"], load_file, 8)
     
 
 def load_file(link: str):
     """
     link like: https://archive.sensor.community/2015-10-01/2015-10-01_ppd42ns_sensor_27.csv
     """
-    resp = httpx.get(link, headers=headers)
+    resp = httpx.get(link, headers=headers, timeout=120)
     data = resp.content.decode()
     path = data_dir + link.split("/")[-1]
     data_object = files_folder + link.split("/")[-1]
