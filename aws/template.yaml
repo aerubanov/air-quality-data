@@ -255,6 +255,16 @@ Resources:
         ScaleInCooldown: 60
         TargetValue: 70
 
+  LoadingStepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionS3Location:
+        Bucket: stepfunc-defenition
+        Key: ExtractionStepFunction.asl.json
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      StateMachineName: ExtractionStepFunction
+      StateMachineType: STANDARD
+
   StepFunctionRole:
     Type: AWS::IAM::Role
     Properties: 
