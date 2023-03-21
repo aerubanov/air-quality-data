@@ -84,7 +84,6 @@
                 }
               }
             },
-            "End": true,
             "Label": "Innerloop",
             "MaxConcurrency": 10,
             "ItemReader": {
@@ -98,8 +97,39 @@
               }
             },
             "ItemBatcher": {
-              "MaxItemsPerBatch": 10
+              "MaxItemsPerBatch": 50
+            },
+            "Next": "Mark index",
+            "ResultWriter": {
+              "Resource": "arn:aws:states:::s3:putObject",
+              "Parameters": {
+                "Bucket": "staging-area-bucket",
+                "Prefix": "map-output/"
+              }
             }
+          },
+          "Mark index": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:index-marker-v-0-0-1:$LATEST"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
           }
         }
       },
