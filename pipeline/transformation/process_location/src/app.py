@@ -3,10 +3,12 @@ import boto3
 import geopy
 
 
-bucket = boto3.resource('s3').Bucket("staging-area-bucket")
+source_bucket = boto3.resource('s3').Bucket("staging-area-bucket")
+target_bucket = boto3.resource('s3').Bucket("transformed-bucket")
 geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
-data_dir = '/tmp/data'
+data_dir = 'tmp/data'
 prefix = 'files/new/'
+target_prefix = 'sensors/'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
@@ -15,13 +17,23 @@ def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
     filename = event['file']
+    sensor_id = filename.split('.')[0].split('_')[-1]
+    result_file = f"{sensor_id}.csv"
+    if check_s3_file_exist(result_file):
+        print(f"File: {result_file} already exists")
+        return
     cord = get_coord(filename)
     location_info = get_location_info(*cord)
-    return location_info
+    write_data_to_s3(sensor_id, location_info)
+    print(f"File: {result_file} uploaded to s3")
+
+
+def check_s3_file_exist(filename: str) -> bool:
+    return source_bucket.Object(target_prefix+filename).exists()
 
 
 def get_coord(filename: str) -> tuple:
-    bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
+    source_bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
     # read first two lines from csv file
     with open(os.path.join(data_dir, filename), 'r') as f:
         data = f.readlines()[:2]
@@ -50,6 +62,12 @@ def get_location_info(latitude: float, longitude: float):
         'longitude': longitude,
         }
 
+def write_data_to_s3(sensor_id, data):
+    with open(os.path.join(data_dir, f'{sensor_id}.csv'), 'w') as f:
+        f.write('sensor_id,latitude,longitude,city,country,country_code\n')
+        f.write(f'{sensor_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["country"]},{data["country_code"]}\n')
+    target_bucket.upload_file(os.path.join(data_dir, f'{sensor_id}.csv'), target_prefix+f'{sensor_id}.csv')
+    os.remove(os.path.join(data_dir, f'{sensor_id}.csv'))
 
 
 if __name__ == "__main__":
