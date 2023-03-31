@@ -7,7 +7,6 @@ bucket = boto3.resource('s3').Bucket("staging-area-bucket")
 geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
 data_dir = '/tmp/data'
 prefix = 'files/new/'
-data_colums = {'timestamp', 'temperature', 'humidity', 'pressure', 'P1', 'P2', 'sensor_id'}
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
