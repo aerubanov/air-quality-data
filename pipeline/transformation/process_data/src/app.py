@@ -15,7 +15,7 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    filename = event['file']
+    filename = event['Key'].split('/')[-1]
     data = get_s3_file_data(filename)
     data = extract_data(data)
     result = write_data_to_s3(data)

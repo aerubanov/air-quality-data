@@ -1,10 +1,12 @@
 import os
 import boto3
 import geopy
+import botocore
 
 
-source_bucket = boto3.resource('s3').Bucket("staging-area-bucket")
-target_bucket = boto3.resource('s3').Bucket("transformed-bucket")
+s3 = boto3.resource('s3')
+source_bucket = s3.Bucket("staging-area-bucket")
+target_bucket = s3.Bucket("transformed-bucket")
 geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
 data_dir = '/tmp/data'
 prefix = 'files/new/'
@@ -16,7 +18,7 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    filename = event['file']
+    filename = event['Key'].split('/')[-1]
     sensor_id = filename.split('.')[0].split('_')[-1]
     result_file = f"{sensor_id}.csv"
     if check_s3_file_exist(result_file):
@@ -29,7 +31,16 @@ def handler(event, context):
 
 
 def check_s3_file_exist(filename: str) -> bool:
-    return source_bucket.Object(target_prefix+filename).exists()
+    try:
+        s3.Object("transformed-bucket", target_prefix+filename).load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            # The object does not exist.
+            return False
+        else:
+            # Something else has gone wrong.
+            raise
+    return True
 
 
 def get_coord(filename: str) -> tuple:
@@ -51,21 +62,26 @@ def get_coord(filename: str) -> tuple:
 
 def get_location_info(latitude: float, longitude: float):
     location = geolocator.reverse(f"{latitude}, {longitude}", language='en')
-    city = location.raw['address']['city']
-    country = location.raw['address']['country']
-    country_code = location.raw['address']['country_code']
+    address = location.raw['address']
+    city = address.get('city', '')
+    state = address.get('state', '')
+    country = address.get('country', '')
+    country_code = address.get('country_code')
+    zipcode = address.get('postcode')
     return {
         'city': city,
+        'state': state,
         'country': country,
         'country_code': country_code,
+        'zipcode': zipcode,
         'latitude': latitude,
         'longitude': longitude,
         }
 
 def write_data_to_s3(sensor_id, data):
     with open(os.path.join(data_dir, f'{sensor_id}.csv'), 'w') as f:
-        f.write('sensor_id,latitude,longitude,city,country,country_code\n')
-        f.write(f'{sensor_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["country"]},{data["country_code"]}\n')
+        f.write('sensor_id,latitude,longitude,city,state,country,country_code,zipcode\n')
+        f.write(f'{sensor_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]}\n')
     target_bucket.upload_file(os.path.join(data_dir, f'{sensor_id}.csv'), target_prefix+f'{sensor_id}.csv')
     os.remove(os.path.join(data_dir, f'{sensor_id}.csv'))
 
