@@ -5,7 +5,7 @@ import pandas as pd
 
 source_bucket = boto3.resource('s3').Bucket("staging-area-bucket")
 target_bucket = boto3.resource('s3').Bucket("transformed-bucket")
-data_dir = 'tmp/data'
+data_dir = '/tmp/data'
 prefix = 'files/new/'
 data_colums = {'timestamp', 'temperature', 'humidity', 'pressure', 'P1', 'P2', 'sensor_id'}
 if not os.path.exists(data_dir):

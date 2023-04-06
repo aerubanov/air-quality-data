@@ -6,7 +6,7 @@ import geopy
 source_bucket = boto3.resource('s3').Bucket("staging-area-bucket")
 target_bucket = boto3.resource('s3').Bucket("transformed-bucket")
 geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
-data_dir = 'tmp/data'
+data_dir = '/tmp/data'
 prefix = 'files/new/'
 target_prefix = 'sensors/'
 if not os.path.exists(data_dir):
