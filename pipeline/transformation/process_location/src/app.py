@@ -23,11 +23,12 @@ def handler(event, context):
     result_file = f"{sensor_id}.csv"
     if check_s3_file_exist(result_file):
         print(f"File: {result_file} already exists")
-        return
+        return {"Status": "Succes", "Key": event["Key"]}
     cord = get_coord(filename)
     location_info = get_location_info(*cord)
     write_data_to_s3(sensor_id, location_info)
     print(f"File: {result_file} uploaded to s3")
+    return {"Status": "Succes", "Key": event["Key"]}
 
 
 def check_s3_file_exist(filename: str) -> bool:

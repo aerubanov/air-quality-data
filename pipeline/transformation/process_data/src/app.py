@@ -20,6 +20,7 @@ def handler(event, context):
     data = extract_data(data)
     result = write_data_to_s3(data)
     print(f"File: {result} uploaded to s3")
+    return {"Status": "Succes", "Key": event["Key"]}
 
 
 def get_s3_file_data(filename: str) -> pd.DataFrame:
@@ -31,8 +32,9 @@ def get_s3_file_data(filename: str) -> pd.DataFrame:
 
 def extract_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df[[col for col in df.columns if col in data_colums]]
-    df = df.set_index('timestamp')
+    df.set_index('timestamp', inplace=True)
     df = df.resample('1H').mean()
+    df.dropna(inplace=True)
     df['sensor_id'] = df['sensor_id'].astype(int)
     # data = {col: df[col].tolist() for col in df.columns}
     # data['timestamp'] = df.index.format()
@@ -51,7 +53,7 @@ def write_data_to_s3(data: pd.DataFrame) -> str:
 
 
 if __name__ == "__main__":
-    data = get_s3_file_data('2017-08-05_bme280_sensor_1207.csv')
+    data = get_s3_file_data('2017-08-05_bme280_sensor_1093.csv')
     print(data.head())
     df = extract_data(data)
-    write_data_to_s3(df)
+    print(df)
