@@ -1,93 +1,116 @@
 {
-    "Comment": "A description of my state machine",
-    "StartAt": "Map",
-    "States": {
-      "Map": {
-        "Type": "Map",
-        "ItemProcessor": {
-          "ProcessorConfig": {
-            "Mode": "DISTRIBUTED",
-            "ExecutionType": "EXPRESS"
-          },
-          "StartAt": "Parallel",
-          "States": {
-            "Parallel": {
-              "Type": "Parallel",
-              "Branches": [
-                {
-                  "StartAt": "Process data",
-                  "States": {
-                    "Process data": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:states:::lambda:invoke",
-                      "OutputPath": "$.Payload",
-                      "Parameters": {
-                        "Payload.$": "$",
-                        "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:data-processor:$LATEST"
-                      },
-                      "Retry": [
-                        {
-                          "ErrorEquals": [
-                            "Lambda.ServiceException",
-                            "Lambda.AWSLambdaException",
-                            "Lambda.SdkClientException",
-                            "Lambda.TooManyRequestsException"
-                          ],
-                          "IntervalSeconds": 2,
-                          "MaxAttempts": 6,
-                          "BackoffRate": 2
-                        }
-                      ],
-                      "End": true
-                    }
-                  }
-                },
-                {
-                  "StartAt": "Process location",
-                  "States": {
-                    "Process location": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:states:::lambda:invoke",
-                      "OutputPath": "$.Payload",
-                      "Parameters": {
-                        "Payload.$": "$",
-                        "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:location-processor:$LATEST"
-                      },
-                      "Retry": [
-                        {
-                          "ErrorEquals": [
-                            "Lambda.ServiceException",
-                            "Lambda.AWSLambdaException",
-                            "Lambda.SdkClientException",
-                            "Lambda.TooManyRequestsException"
-                          ],
-                          "IntervalSeconds": 2,
-                          "MaxAttempts": 6,
-                          "BackoffRate": 2
-                        }
-                      ],
-                      "End": true
-                    }
+  "Comment": "A description of my state machine",
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "EXPRESS"
+        },
+        "StartAt": "Parallel",
+        "States": {
+          "Parallel": {
+            "Type": "Parallel",
+            "Branches": [
+              {
+                "StartAt": "Process data",
+                "States": {
+                  "Process data": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:data-processor:$LATEST"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 6,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
                   }
                 }
-              ],
-              "End": true
-            }
-          }
-        },
-        "End": true,
-        "Label": "Map",
-        "MaxConcurrency": 10,
-        "ItemReader": {
-          "Resource": "arn:aws:states:::s3:listObjectsV2",
-          "Parameters": {
-            "Bucket": "staging-area-bucket",
-            "Prefix": "files/new/"
+              },
+              {
+                "StartAt": "Process location",
+                "States": {
+                  "Process location": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:location-processor:$LATEST"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 6,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              }
+            ],
+            "Next": "Lambda Invoke"
           },
-          "ReaderConfig": {
-            "MaxItems": 100
+          "Lambda Invoke": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:file-mover:$LATEST"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
           }
+        }
+      },
+      "End": true,
+      "Label": "Map",
+      "MaxConcurrency": 10,
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:listObjectsV2",
+        "Parameters": {
+          "Bucket": "staging-area-bucket",
+          "Prefix": "files/new/"
+        },
+        "ReaderConfig": {
+          "MaxItems": 100
         }
       }
     }
   }
+}

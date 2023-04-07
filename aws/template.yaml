@@ -364,6 +364,16 @@ Resources:
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
 
+  TransformationStepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionS3Location:
+        Bucket: stepfunc-defenition
+        Key: TransformationStepFunction.asl.json
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      StateMachineName: TransformationStepFunction
+      StateMachineType: STANDARD
+
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
