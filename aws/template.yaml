@@ -352,6 +352,18 @@ Resources:
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
 
+  FileMover:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Move files
+      FunctionName: file-mover
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/file-mover:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
