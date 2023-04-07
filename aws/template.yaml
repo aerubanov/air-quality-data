@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: AWS CloudFormation Template to create resources for ETL pipline.
 Resources:
+  # EXTRACTION
   S3BucketStaging:
     Type: AWS::S3::Bucket
     Properties:
@@ -85,12 +86,14 @@ Resources:
                   - 's3:ListBucket'
                 Resource: 
                   - 'arn:aws:s3:::staging-area-bucket'
+                  - 'arn:aws:s3:::transformed-bucket'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
                   - 'arn:aws:s3:::staging-area-bucket/*'
+                  - 'arn:aws:s3:::transformed-bucket/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       RoleName: S3LambdaRole
@@ -313,12 +316,65 @@ Resources:
                   - states:StartExecution
                   - states:StopSyncExecution
                 Resource: 'arn:aws:states:*:307660119800:stateMachine:*'
+  #TRANSFORMATION
+  S3BucketTransformation:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: transformed-bucket
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+    DeletionPolicy: Retain
+
+  DataProcessor:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Process sensor measurements data
+      FunctionName: data-processor
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/data-processor:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
+  LocationProcessor:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Process location data
+      FunctionName: location-processor
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/location-processor:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
+  FileMover:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Move files
+      FunctionName: file-mover
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/file-mover:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3LambdaRole.Arn'
+      Timeout: 600
+
+  TransformationStepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionS3Location:
+        Bucket: stepfunc-defenition
+        Key: TransformationStepFunction.asl.json
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      StateMachineName: TransformationStepFunction
+      StateMachineType: STANDARD
 
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
     Description: Name of the staging ares s3 bucket.
-
-
-
-      
