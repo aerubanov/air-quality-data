@@ -51,7 +51,17 @@ def handler(event, context):
     #for link in event["Items"]:
     #    load_file(link)
     process_in_threads(event["Items"], load_file, 8)
-    
+
+
+def validate_data(data: list) -> bool:
+    columns = ['sensor_id', 'timestamp', 'lat', 'lon']
+    header = data.split("\n")[0]
+    header = header.split(";")
+    for col in columns:
+        if col not in header:
+            return False
+    return True
+
 
 def load_file(link: str):
     """
@@ -59,6 +69,10 @@ def load_file(link: str):
     """
     resp = httpx.get(link, headers=headers, timeout=120)
     data = resp.content.decode()
+    if not validate_data(data):
+        print(f"Invalid data: {link}")
+        print(data)
+        return
     path = data_dir + link.split("/")[-1]
     data_object = files_folder + link.split("/")[-1]
     with open(path, 'w') as f:
