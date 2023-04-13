@@ -36,7 +36,7 @@ Resources:
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
-      Timeout: 600
+      Timeout: 300
 
   Loader:
     Type: AWS::Lambda::Function
@@ -48,7 +48,7 @@ Resources:
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
-      Timeout: 600
+      Timeout: 900
 
   IndexMarker:
     Type: AWS::Lambda::Function
@@ -60,7 +60,7 @@ Resources:
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
-      Timeout: 600
+      Timeout: 60
 
   S3LambdaRole:      
     Type: AWS::IAM::Role
