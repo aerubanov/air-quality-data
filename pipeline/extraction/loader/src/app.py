@@ -76,3 +76,4 @@ def load_file(link: str):
 
 if __name__ == "__main__":
     load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")
+    load_file('https://archive.sensor.community/2022/2022-01-01/2022-01-01_sps30_sensor_68925.csv')
