@@ -24,6 +24,9 @@ nested_folders = [
     "2017/",
     "2018/",
     "2019/",
+    "2020/",
+    "2021/",
+    "2022/",
 ]
 
 
@@ -48,13 +51,17 @@ def build_index():
     resp = httpx.get(base_url, headers=headers, timeout=120)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))]
-    for folder in nested_folders:
-        resp = httpx.get(base_url + folder, headers=headers, timeout=120)
-        print(resp)
-        soup = BeautifulSoup(resp.text, 'lxml')
-        links.extend([folder+link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))])
+
+    # uncomment this lines to download data for previeous years
+    # for folder in nested_folders:
+    #     resp = httpx.get(base_url + folder, headers=headers, timeout=120)
+    #     print(resp)
+    #     soup = BeautifulSoup(resp.text, 'lxml')
+    #     links.extend([folder+link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))])
+
     checked_folders=set(get_folders_list())
     links = [i for i in links if i not in checked_folders]
+    links = [i for i in links if check_link(i)]
     print(f"{len(links)} new links")
     if len(links) == 0:
         print("Index is up to date, nothing to download")
@@ -62,17 +69,20 @@ def build_index():
     print(links)
     with folders_table.batch_writer() as batch:
         for link in links:
-            if check_link(link):
-                item = {
-                    "folder": link,
-                    "processed": False,
-                }
-                batch.put_item(Item=item)
+            item = {
+                "folder": link,
+                "processed": False,
+            }
+            batch.put_item(Item=item)
 
 
 def check_link(link: str) -> bool:
     "check link format"
     if not link_pattern.match(link):
+        return False
+    
+    # download data only for March
+    if '-03-' not in link:
         return False
 
     return True
