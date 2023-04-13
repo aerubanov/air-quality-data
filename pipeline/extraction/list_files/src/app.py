@@ -3,6 +3,7 @@ import bs4
 import json
 import os
 import boto3
+import time
 
 base_url = "https://archive.sensor.community/"
 backet = boto3.resource("s3").Bucket("staging-area-bucket")
@@ -44,8 +45,9 @@ def list_files(link):
     # load url with retries
     try:
         response = httpx.get(url, headers=headers, timeout=20)
-    except (httpx.ReadTimeout, httpx.ConnectTimeout):
-        print("Timeout")
+    except (httpx.HTTPError):
+        print("httpx exception. Retry")
+        time.sleep(15)
         response = httpx.get(url, headers=headers, timeout=120)
 
     soup = bs4.BeautifulSoup(response.text, 'lxml')
