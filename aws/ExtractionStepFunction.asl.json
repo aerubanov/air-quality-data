@@ -97,7 +97,7 @@
               }
             },
             "ItemBatcher": {
-              "MaxItemsPerBatch": 50
+              "MaxItemsPerBatch": 100
             },
             "Next": "Mark index",
             "ResultWriter": {
