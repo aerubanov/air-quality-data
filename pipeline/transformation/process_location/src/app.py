@@ -18,17 +18,18 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    filename = event['Key'].split('/')[-1]
-    sensor_id = filename.split('.')[0].split('_')[-1]
-    result_file = f"{sensor_id}.csv"
-    if check_s3_file_exist(result_file):
-        print(f"File: {result_file} already exists")
-        return {"Status": "Succes", "Key": event["Key"]}
-    cord = get_coord(filename)
-    location_info = get_location_info(*cord)
-    write_data_to_s3(sensor_id, location_info)
-    print(f"File: {result_file} uploaded to s3")
-    return {"Status": "Succes", "Key": event["Key"]}
+    for item in event["Items"]:
+        filename = item['Key'].split('/')[-1]
+        sensor_id = filename.split('.')[0].split('_')[-1]
+        result_file = f"{sensor_id}.csv"
+        if check_s3_file_exist(result_file):
+            print(f"File: {result_file} already exists")
+            continue
+        *cord, sensor_type = get_coord(filename)
+        location_info = get_location_info(*cord)
+        write_data_to_s3(sensor_id, sensor_type, location_info)
+        print(f"File: {result_file} uploaded to s3")
+    return {"Status": "Succes", "Items": event["Items"]}
 
 
 def check_s3_file_exist(filename: str) -> bool:
@@ -55,10 +56,12 @@ def get_coord(filename: str) -> tuple:
     # get position of lat and lon columns
     lat_col = headers.index('lat')
     lon_col = headers.index('lon')
+    sensor_type_col = headers.index('sensor_type')
     # get latitude and longitude
     latitude = float(values[lat_col])
     longitude = float(values[lon_col])
-    return (latitude, longitude)
+    sensor_type = values[sensor_type_col]
+    return (latitude, longitude, sensor_type)
 
 
 def get_location_info(latitude: float, longitude: float):
@@ -79,10 +82,10 @@ def get_location_info(latitude: float, longitude: float):
         'longitude': longitude,
         }
 
-def write_data_to_s3(sensor_id, data):
+def write_data_to_s3(sensor_id, sensor_type, data):
     with open(os.path.join(data_dir, f'{sensor_id}.csv'), 'w') as f:
-        f.write('sensor_id,latitude,longitude,city,state,country,country_code,zipcode\n')
-        f.write(f'{sensor_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]}\n')
+        f.write('sensor_id,sensor_type,latitude,longitude,city,state,country,country_code,zipcode\n')
+        f.write(f'{sensor_id},{sensor_type},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]}\n')
     target_bucket.upload_file(os.path.join(data_dir, f'{sensor_id}.csv'), target_prefix+f'{sensor_id}.csv')
     os.remove(os.path.join(data_dir, f'{sensor_id}.csv'))
 
