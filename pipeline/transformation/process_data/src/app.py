@@ -15,12 +15,16 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    filename = event['Key'].split('/')[-1]
-    data = get_s3_file_data(filename)
-    data = extract_data(data)
-    result = write_data_to_s3(data)
+    df_list = []
+    for item in event["Items"]:
+        filename = item['Key'].split('/')[-1]
+        data = get_s3_file_data(filename)
+        data = extract_data(data)
+        df_list.append(data)
+    df = pd.concat(df_list)
+    result = write_data_to_s3(df)
     print(f"File: {result} uploaded to s3")
-    return {"Status": "Succes", "Key": event["Key"]}
+    return {"Status": "Succes", "Key": item["Key"]}
 
 
 def get_s3_file_data(filename: str) -> pd.DataFrame:
