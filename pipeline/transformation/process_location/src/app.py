@@ -18,17 +18,18 @@ if not os.path.exists(data_dir):
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    filename = event['Key'].split('/')[-1]
-    sensor_id = filename.split('.')[0].split('_')[-1]
-    result_file = f"{sensor_id}.csv"
-    if check_s3_file_exist(result_file):
-        print(f"File: {result_file} already exists")
-        return {"Status": "Succes", "Key": event["Key"]}
-    *cord, sensor_type = get_coord(filename)
-    location_info = get_location_info(*cord)
-    write_data_to_s3(sensor_id, sensor_type, location_info)
-    print(f"File: {result_file} uploaded to s3")
-    return {"Status": "Succes", "Key": event["Key"]}
+    for item in event["Items"]:
+        filename = item['Key'].split('/')[-1]
+        sensor_id = filename.split('.')[0].split('_')[-1]
+        result_file = f"{sensor_id}.csv"
+        if check_s3_file_exist(result_file):
+            print(f"File: {result_file} already exists")
+            continue
+        *cord, sensor_type = get_coord(filename)
+        location_info = get_location_info(*cord)
+        write_data_to_s3(sensor_id, sensor_type, location_info)
+        print(f"File: {result_file} uploaded to s3")
+    return {"Status": "Succes", "Items": event["Items"]}
 
 
 def check_s3_file_exist(filename: str) -> bool:
