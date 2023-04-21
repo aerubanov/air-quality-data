@@ -1,0 +1,25 @@
+erdiagram Model
+
+notation=default
+entity Temperature {
+   id key
+   temperature
+   humidity
+   pressure
+   location_id
+   senor_id
+   time_id
+}
+
+entity Location {
+   location_id key
+   lat
+   lon
+   city
+   state
+   country
+}
+
+relationship Rel {
+   Temperature -> Location
+}
