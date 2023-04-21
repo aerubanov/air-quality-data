@@ -9,6 +9,7 @@ entity Temperature {
    location_id
    senor_id
    time_id
+   timestamp
 }
 
 entity Location {
@@ -18,8 +19,52 @@ entity Location {
    city
    state
    country
+   country_code
+   zipcode
+   timezone
 }
 
-relationship Rel {
+entity Concentration {
+   id key
+   P1
+   P2
+   sensor_id
+   location_id
+   timestamp
+}
+
+entity Time {
+   time_id key
+   year
+   month
+   day_of_week
+}
+
+entity Sensor{
+   sensor_id key
+   sensor_type
+}
+
+relationship Rel1 {
    Temperature -> Location
+}
+
+relationship Rel2 {
+   Concentration -> Location
+}
+
+relationship Rel3 {
+   Temperature -> Time
+}
+
+relationship Rel4 {
+   Concentration -> Time
+}
+
+relationship Rel5 {
+   Temperature -> Sensor
+}
+
+relationship Rel6 {
+   Concentration -> Sensor
 }
