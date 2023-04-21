@@ -46,25 +46,25 @@ entity Sensor{
 }
 
 relationship Rel1 {
-   Temperature -> Location
+   Temperature [1..N] -> Location [1]
 }
 
 relationship Rel2 {
-   Concentration -> Location
+   Concentration [1..N] -> Location [1]
 }
 
 relationship Rel3 {
-   Temperature -> Time
+   Temperature [1..N] -> Time [1..N]
 }
 
 relationship Rel4 {
-   Concentration -> Time
+   Concentration [1..N] -> Time [1..N]
 }
 
 relationship Rel5 {
-   Temperature -> Sensor
+   Temperature [1..N] -> Sensor [1]
 }
 
 relationship Rel6 {
-   Concentration -> Sensor
+   Concentration [1..N] -> Sensor [1]
 }
