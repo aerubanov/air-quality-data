@@ -1,0 +1,70 @@
+erdiagram Model
+
+notation=default
+entity Temperature {
+   id key
+   temperature
+   humidity
+   pressure
+   location_id
+   senor_id
+   time_id
+   timestamp
+}
+
+entity Location {
+   location_id key
+   lat
+   lon
+   city
+   state
+   country
+   country_code
+   zipcode
+   timezone
+}
+
+entity Concentration {
+   id key
+   P1
+   P2
+   sensor_id
+   location_id
+   timestamp
+}
+
+entity Time {
+   time_id key
+   year
+   month
+   day_of_week
+}
+
+entity Sensor{
+   sensor_id key
+   sensor_type
+}
+
+relationship Rel1 {
+   Temperature [1..N] -> Location [1]
+}
+
+relationship Rel2 {
+   Concentration [1..N] -> Location [1]
+}
+
+relationship Rel3 {
+   Temperature [1..N] -> Time [1..N]
+}
+
+relationship Rel4 {
+   Concentration [1..N] -> Time [1..N]
+}
+
+relationship Rel5 {
+   Temperature [1..N] -> Sensor [1]
+}
+
+relationship Rel6 {
+   Concentration [1..N] -> Sensor [1]
+}
