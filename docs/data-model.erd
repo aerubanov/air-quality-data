@@ -1,15 +1,14 @@
 erdiagram Model
 
 notation=default
+
 entity Temperature {
-   id key
    temperature
    humidity
    pressure
-   location_id
-   senor_id
-   time_id
-   timestamp
+   location_id key
+   senor_id key
+   time_id key
 }
 
 entity Location {
@@ -25,12 +24,11 @@ entity Location {
 }
 
 entity Concentration {
-   id key
    P1
    P2
-   sensor_id
-   location_id
-   timestamp
+   sensor_id key
+   location_id key
+   time_id key
 }
 
 entity Time {
@@ -38,6 +36,7 @@ entity Time {
    year
    month
    day_of_week
+   timestamp
 }
 
 entity Sensor{
