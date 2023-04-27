@@ -1,2 +1,3 @@
 boto3==1.26.43
 geopy==2.3.0
+timezonefinder==6.2.0 

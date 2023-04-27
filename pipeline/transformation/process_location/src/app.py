@@ -2,7 +2,7 @@ import os
 import boto3
 import geopy
 import botocore
-
+from timezonefinder import TimezoneFinder
 
 s3 = boto3.resource('s3')
 source_bucket = s3.Bucket("staging-area-bucket")
@@ -13,6 +13,7 @@ prefix = 'files/new/'
 target_prefix = 'sensors/'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
+tf = TimezoneFinder()
 
 
 def handler(event, context):
@@ -27,7 +28,8 @@ def handler(event, context):
             continue
         
         location_info = get_location_info(*cord)
-        write_data_to_s3(location_id, location_info)
+        timezone = get_timezone(*cord)
+        write_data_to_s3(location_id, timezone, location_info)
         print(f"File: {result_file} uploaded to s3")
     return {"Status": "Succes", "Items": event["Items"]}
 
@@ -82,15 +84,20 @@ def get_location_info(latitude: float, longitude: float):
         'longitude': longitude,
         }
 
-def write_data_to_s3(location_id, data):
+def get_timezone(latitude: float, longitude: float):
+    return tf.timezone_at(lng=latitude, lat=longitude)
+
+def write_data_to_s3(location_id, timezone, data):
     with open(os.path.join(data_dir, f'{location_id}.csv'), 'w') as f:
-        f.write('location_id,latitude,longitude,city,state,country,country_code,zipcode\n')
-        f.write(f'{location_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]}\n')
+        f.write('location_id,latitude,longitude,city,state,country,country_code,zipcode,timezone\n')
+        f.write(f'{location_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]},{timezone}\n')
     target_bucket.upload_file(os.path.join(data_dir, f'{location_id}.csv'), target_prefix+f'{location_id}.csv')
     os.remove(os.path.join(data_dir, f'{location_id}.csv'))
 
 
 if __name__ == "__main__":
-    coord = get_coord('2017-08-05_bme280_sensor_1207.csv')
+    *coord, location_id = get_coord('2023-03-01_bme280_sensor_10006.csv')
     print(coord)
+    print(location_id)
     print(get_location_info(*coord))
+    print(get_timezone(*coord))
