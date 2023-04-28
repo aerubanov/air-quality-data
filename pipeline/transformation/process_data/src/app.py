@@ -28,7 +28,7 @@ def handler(event, context):
         time_list.append(time_df)
     fact_df = pd.concat(fact_list)
     time_df = pd.concat(time_list)
-    result = write_data_to_s3(df)
+    result = write_data_to_s3(fact_df)
     print(f"File: {result} uploaded to s3")
     cnt = write_time_to_s3(time_df)
     print(f"{cnt} time files uploaded to s3")
