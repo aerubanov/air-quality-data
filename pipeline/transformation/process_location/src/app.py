@@ -10,7 +10,8 @@ target_bucket = s3.Bucket("transformed-bucket")
 geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
 data_dir = '/tmp/data'
 prefix = 'files/new/'
-target_prefix = 'sensors/'
+target_prefix_sensors = 'sensors/'
+target_prefix_locations = 'locations/'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 tf = TimezoneFinder()
@@ -24,13 +25,13 @@ def handler(event, context):
         *cord, location_id = get_coord(filename)
         result_file = f"{location_id}.csv"
         if check_s3_file_exist(result_file):
-            print(f"File: {result_file} already exists")
-            continue
-        
-        location_info = get_location_info(*cord)
-        timezone = get_timezone(*cord)
-        write_data_to_s3(location_id, timezone, location_info)
-        print(f"File: {result_file} uploaded to s3")
+            print(f"Location file: {result_file} already exists")
+        else:
+            location_info = get_location_info(*cord)
+            timezone = get_timezone(*cord)
+            write_location_data_to_s3(location_id, timezone, location_info)
+            print(f"Location file: {result_file} uploaded to s3")
+        sensor_info = get_sensor_info(filename)
     return {"Status": "Succes", "Items": event["Items"]}
 
 
@@ -66,6 +67,24 @@ def get_coord(filename: str) -> tuple:
     return (latitude, longitude, location_id)
 
 
+def get_sensor_info(filename: str) -> dict:
+    source_bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
+    with open(os.path.join(data_dir, filename), 'r') as f:
+        data = f.readlines()
+    os.remove(os.path.join(data_dir, filename))
+    headers = data[0].split(';')
+    values = data[1].split(';')
+    senor_id_col = headers.index('sensor_id')
+    sensor_type_col = headers.index('sensor_type')
+    sensor_id = int(values[senor_id_col])
+    sensor_type = values[sensor_type_col]
+    return {
+        "sensor_id": sensor_id,
+        "sensor_type": sensor_type
+    }
+
+
+
 def get_location_info(latitude: float, longitude: float):
     location = geolocator.reverse(f"{latitude}, {longitude}", language='en')
     address = location.raw['address']
@@ -87,12 +106,19 @@ def get_location_info(latitude: float, longitude: float):
 def get_timezone(latitude: float, longitude: float):
     return tf.timezone_at(lng=latitude, lat=longitude)
 
-def write_data_to_s3(location_id, timezone, data):
+def write_location_data_to_s3(location_id, timezone, data):
     with open(os.path.join(data_dir, f'{location_id}.csv'), 'w') as f:
         f.write('location_id,latitude,longitude,city,state,country,country_code,zipcode,timezone\n')
         f.write(f'{location_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]},{timezone}\n')
-    target_bucket.upload_file(os.path.join(data_dir, f'{location_id}.csv'), target_prefix+f'{location_id}.csv')
+    target_bucket.upload_file(os.path.join(data_dir, f'{location_id}.csv'), target_prefix_locations+f'{location_id}.csv')
     os.remove(os.path.join(data_dir, f'{location_id}.csv'))
+
+def write_sensor_data_to_s3(sensor_info:dict):
+    with open(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'), 'w') as f:
+        f.write('sensor_id,sensor_type\n')
+        f.write(f'{sensor_info["sensor_id"]},{sensor_info["sensor_type"]}\n')
+    target_bucket.upload_file(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'), target_prefix_sensors+f'{sensor_info["sensor_id"]}.csv')
+    os.remove(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'))
 
 
 if __name__ == "__main__":
