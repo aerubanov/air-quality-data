@@ -24,7 +24,7 @@ def handler(event, context):
         filename = item['Key'].split('/')[-1]
         *cord, location_id = get_coord(filename)
         result_file = f"{location_id}.csv"
-        if check_s3_file_exist(result_file):
+        if check_s3_file_exist(result_file, target_prefix_locations):
             print(f"Location file: {result_file} already exists")
         else:
             location_info = get_location_info(*cord)
@@ -32,12 +32,18 @@ def handler(event, context):
             write_location_data_to_s3(location_id, timezone, location_info)
             print(f"Location file: {result_file} uploaded to s3")
         sensor_info = get_sensor_info(filename)
+        result_file = f"{sensor_info['sensor_id']}.csv"
+        if check_s3_file_exist(result_file, target_prefix_sensors):
+            print(f"Sensor file: {result_file} already exists")
+        else:
+            write_sensor_data_to_s3(sensor_info)
+            print(f"Sensor file: {result_file} uploaded to s3")
     return {"Status": "Succes", "Items": event["Items"]}
 
 
-def check_s3_file_exist(filename: str) -> bool:
+def check_s3_file_exist(filename: str, prefix: str) -> bool:
     try:
-        s3.Object("transformed-bucket", target_prefix+filename).load()
+        s3.Object("transformed-bucket", prefix+filename).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             # The object does not exist.
