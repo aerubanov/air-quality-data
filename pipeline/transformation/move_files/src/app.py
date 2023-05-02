@@ -12,11 +12,12 @@ def handler(event, context):
     print(f"Context: {context}")
     event1, event2 = event[0], event[1]
     if event1["Status"] == "Succes" and event2["Status"] == "Succes":
-        filename = event1['Key'].split('/')[-1]
-        move_file(filename)
-        print(f"File: {filename} moved to processed folder")
+        filenames = [item['Key'].split('/')[-1] for item in event1["Items"]]
+        for filename in filenames:
+            move_file(filename)
+        print(f"Folllowing files moved to processed folder: {filenames}")
     else:
-        print(f"File: {event1['Key']} not processed")
+        print(f"Files not processed: {filenames}")
         raise Exception("File not processed")
     return event1["Status"], event2["Status"]
     
@@ -31,7 +32,3 @@ def move_file(filename: str):
         },
     )
     s3.Object('staging-area-bucket', source_folder+filename).delete()
-
-
-if __name__ == "__main__":
-    handler([{'Status': 'Succes', 'Key': 'files/new/2017-08-05_bme280_sensor_1357.csv'}, {'Status': 'Succes', 'Key': 'files/new/2017-08-05_bme280_sensor_1357.csv'}], None)
