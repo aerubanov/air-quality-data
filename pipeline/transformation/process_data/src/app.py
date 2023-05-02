@@ -42,8 +42,39 @@ def get_s3_file_data(filename: str) -> pd.DataFrame:
     return df
 
 
+def filter_messurements(df: pd.DataFrame) -> pd.DataFrame:
+    # filter temperature columns if present
+    if 'temperature' in df.columns:
+        df.drop(df[df['temperature'] > 60].index, inplace=True)
+        df.drop(df[df['temperature'] < -60].index, inplace=True)
+    
+    #filter humidity if present
+    if 'humidity' in df.columns:
+        df.drop(df[df['humidity'] > 100].index, inplace=True)
+        df.drop(df[df['humidity'] < 0].index, inplace=True)
+    
+    # filter pressure if present
+    if 'pressure' in df.columns:
+        df.drop(df[df['pressure'] > 120000].index, inplace=True)
+        df.drop(df[df['pressure'] < 80000].index, inplace=True)
+
+    # filter P1 if present:
+    if 'P1' in df.columns:
+        df.drop(df[df['P1'] > 1000].index, inplace=True)
+        df.drop(df[df['P1'] < 0].index, inplace=True)
+
+    # filter P2 if present:
+    if 'P2' in df.columns:
+        df.drop(df[df['P2'] > 1000].index, inplace=True)
+        df.drop(df[df['P2'] < 0].index, inplace=True)
+
+    return df
+
+
+
 def extract_data(df: pd.DataFrame) -> Tuple[pd.DataFrame]:
     df = df[[col for col in df.columns if col in data_colums]]
+    df = filter_messurements(df)
     df.set_index('timestamp', inplace=True)
     df = df.resample('1H').mean()
     df.dropna(inplace=True)
