@@ -74,7 +74,7 @@ def write_data_to_s3(data: pd.DataFrame) -> str:
     prefix = 'concentration/' if 'P1' in data.columns else 'temperature/'
     date = data.index[0].date()
     sensor_id = data['sensor_id'].iloc[0]
-    data.to_csv(os.path.join(data_dir, f'{date}_{sensor_id}.csv'))
+    data.to_csv(os.path.join(data_dir, f'{date}_{sensor_id}.csv'), index=False)
     target_bucket.upload_file(os.path.join(data_dir, f'{date}_{sensor_id}.csv'), prefix+f'{date}_{sensor_id}.csv')
     os.remove(os.path.join(data_dir, f'{date}_{sensor_id}.csv'))
     return prefix+f'{date}_{sensor_id}.csv'
@@ -82,14 +82,15 @@ def write_data_to_s3(data: pd.DataFrame) -> str:
 def write_time_to_s3(data: pd.DataFrame) -> str:
     prefix = 'time/'
     data = data.drop_duplicates()
+    columns = data.columns
     cnt = 0
     # iterate over rows in dataframe
-    for index, row in data.iterrows():
+    for _, row in data.iterrows():
         time_id = row['time_id']
         if check_s3_file_exist(f"{time_id}.csv", prefix):
             continue
         with open(os.path.join(data_dir, f'{time_id}.csv'), 'w') as f:
-            f.write(row.to_csv())
+            f.write(','.join([str(row[col]) for col in columns])+"\n")
         target_bucket.upload_file(os.path.join(data_dir, f'{time_id}.csv'), prefix+f'{time_id}.csv')
         os.remove(os.path.join(data_dir, f'{time_id}.csv'))
         cnt += 1
@@ -116,3 +117,5 @@ if __name__ == "__main__":
     fact_df, time_df = extract_data(data)
     print(fact_df)
     print(time_df)
+    #write_time_to_s3(time_df)
+    #write_data_to_s3(fact_df)
