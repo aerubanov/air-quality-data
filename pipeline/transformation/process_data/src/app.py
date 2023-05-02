@@ -32,7 +32,7 @@ def handler(event, context):
     print(f"File: {result} uploaded to s3")
     cnt = write_time_to_s3(time_df)
     print(f"{cnt} time files uploaded to s3")
-    return {"Status": "Succes", "Key": item["Key"]}
+    return {"Status": "Succes", "Items": event["Items"]}
 
 
 def get_s3_file_data(filename: str) -> pd.DataFrame:
