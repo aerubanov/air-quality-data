@@ -316,6 +316,7 @@ Resources:
                   - states:StartExecution
                   - states:StopSyncExecution
                 Resource: 'arn:aws:states:*:307660119800:stateMachine:*'
+
   #TRANSFORMATION
   S3BucketTransformation:
     Type: AWS::S3::Bucket
@@ -374,7 +375,7 @@ Resources:
       StateMachineName: TransformationStepFunction
       StateMachineType: STANDARD
 
-  #AWS AURORA DATABASW
+  #AWS AURORA DATABASE
   DBCluster:
     Type: AWS::RDS::DBCluster
     Properties:
@@ -388,6 +389,63 @@ Resources:
         MinCapacity: 2
         MaxCapacity: 8
         SecondsUntilAutoPause: 300
+
+  UsernameSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: aurora-username
+      SecretString: !Ref DBUsername
+
+  PasswordSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: aurora-password
+      SecretString: !Ref DBPassword
+
+  S3AuroraRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: S3FullAcces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:*'
+        - PolicyName: AuroraFullAcces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'rds-data:BatchExecuteStatement'
+                  - 'rds-data:ExecuteStatement'
+                  - 'rds-data:BeginTransaction'
+                  - 'rds-data:CommitTransaction'
+                  - 'rds-data:RollbackTransaction'
+                Resource:
+                  - 'arn:aws:rds:eu-central-1:307660119800:cluster'
+        - PolicyName: DBSecreatAcces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: 
+                  - 'arn:aws:secretsmanager:*:*:secret:aurora-username/*'
+                  - 'arn:aws:secretsmanager:*:*:secret:aurora-password/*'
 
 Outputs:
   StagingBucketName:
