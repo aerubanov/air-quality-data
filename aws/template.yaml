@@ -404,6 +404,10 @@ Resources:
 
   S3AuroraRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DBCluster
+      - PasswordSecret
+      - UsernameSecret
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -416,13 +420,6 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: S3FullAcces
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 's3:*'
         - PolicyName: AuroraFullAcces
           PolicyDocument:
             Version: "2012-10-17"
@@ -435,7 +432,7 @@ Resources:
                   - 'rds-data:CommitTransaction'
                   - 'rds-data:RollbackTransaction'
                 Resource:
-                  - 'arn:aws:rds:eu-central-1:307660119800:cluster'
+                  - 'arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
         - PolicyName: DBSecreatAcces
           PolicyDocument:
             Version: "2012-10-17"
@@ -444,8 +441,8 @@ Resources:
                 Action:
                   - 'secretsmanager:GetSecretValue'
                 Resource: 
-                  - 'arn:aws:secretsmanager:*:*:secret:aurora-username/*'
-                  - 'arn:aws:secretsmanager:*:*:secret:aurora-password/*'
+                  - !GetAtt 'PasswordSecret.Id'
+                  - !GetAtt 'UsernameSecret.Id'
 
 Outputs:
   StagingBucketName:
