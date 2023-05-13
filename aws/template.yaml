@@ -389,6 +389,7 @@ Resources:
         MinCapacity: 2
         MaxCapacity: 8
         SecondsUntilAutoPause: 300
+      EnableHttpEndpoint: true
 
   AuroraSecret:
     Type: AWS::SecretsManager::Secret
