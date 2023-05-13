@@ -395,7 +395,10 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: aurora-secret
-      SecretString: !Sub '{"username": "${!Ref DBUsername}", "password": "${!Ref DBPassword}"}'
+      SecretString: !Sub
+        - '{"username": "${User}", "password": "${Pass}"}'
+        - User: !Ref DBUsername
+          Pass: !Ref DBPassword
   
   SecretAuroraAttachment:
     Type: AWS::SecretsManager::SecretTargetAttachment
