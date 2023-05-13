@@ -390,24 +390,26 @@ Resources:
         MaxCapacity: 8
         SecondsUntilAutoPause: 300
 
-  UsernameSecret:
+  AuroraSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: aurora-username
-      SecretString: !Ref DBUsername
-
-  PasswordSecret:
-    Type: AWS::SecretsManager::Secret
+      Name: aurora-secret
+      SecretString: !Sub '{"username": "${!Ref DBUsername}", "password": "${!Ref DBPassword}"}'
+  
+  SecretAuroraAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
     Properties:
-      Name: aurora-password
-      SecretString: !Ref DBPassword
+      SecretId:
+        Ref: AuroraSecret
+      TargetId:
+        Ref: DBCluster
+      TargetType: AWS::RDS::DBCluster
 
   S3AuroraRole:
     Type: AWS::IAM::Role
     DependsOn:
       - DBCluster
-      - PasswordSecret
-      - UsernameSecret
+      - AuroraSecret
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -441,8 +443,7 @@ Resources:
                 Action:
                   - 'secretsmanager:GetSecretValue'
                 Resource: 
-                  - !GetAtt 'PasswordSecret.Id'
-                  - !GetAtt 'UsernameSecret.Id'
+                  - !GetAtt 'AuroraSecret.Id'
 
 Outputs:
   StagingBucketName:
