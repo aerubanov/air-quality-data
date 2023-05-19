@@ -3,45 +3,46 @@ erdiagram Model
 notation=default
 
 entity Temperature {
-   temperature
-   humidity
-   pressure
-   location_id key
-   senor_id key
-   time_id key
+   temperature: FLOAT
+   humidity: FLOAT
+   pressure: FLOAT
+   location_id: INT key
+   senor_id: INT key
+   time_id: INT key
 }
 
 entity Location {
-   location_id key
-   lat
-   lon
-   city
-   state
-   country
-   country_code
-   zipcode
-   timezone
+   location_id: INT key
+   lat: FLOAT
+   lon: FLOAT
+   city: TEXT
+   state: TEXT
+   country: TEXT
+   country_code: TEXT
+   zipcode: TEXT
+   timezone: TEXT
 }
 
 entity Concentration {
-   P1
-   P2
-   sensor_id key
-   location_id key
-   time_id key
+   P1: FLOAT
+   P2: FLOAT
+   sensor_id: INT key
+   location_id: INT key
+   time_id: INT key
 }
 
 entity Time {
-   time_id key
-   year
-   month
-   day_of_week
-   timestamp
+   time_id: INT key
+   year: SMALLINT
+   month: SMALLINT
+   day_of_week: SMALLINT
+   timestamp: TIMESTAMPTZ
+   isweekend: BOOL
 }
 
 entity Sensor{
-   sensor_id key
-   sensor_type
+   sensor_id: INT key
+   sensor_type: TEXT
 }
 
 relationship Rel1 {

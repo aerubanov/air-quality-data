@@ -316,6 +316,7 @@ Resources:
                   - states:StartExecution
                   - states:StopSyncExecution
                 Resource: 'arn:aws:states:*:307660119800:stateMachine:*'
+
   #TRANSFORMATION
   S3BucketTransformation:
     Type: AWS::S3::Bucket
@@ -374,7 +375,99 @@ Resources:
       StateMachineName: TransformationStepFunction
       StateMachineType: STANDARD
 
+  #AWS AURORA DATABASE
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBClusterIdentifier: aurora-cluster
+      Engine: aurora-postgresql
+      EngineMode: serverless
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      ScalingConfiguration:
+        AutoPause: true
+        MinCapacity: 2
+        MaxCapacity: 8
+        SecondsUntilAutoPause: 300
+      EnableHttpEndpoint: true
+
+  AuroraSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: aurora-secret
+      SecretString: !Sub
+        - '{"username": "${User}", "password": "${Pass}"}'
+        - User: !Ref DBUsername
+          Pass: !Ref DBPassword
+  
+  SecretAuroraAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId:
+        Ref: AuroraSecret
+      TargetId:
+        Ref: DBCluster
+      TargetType: AWS::RDS::DBCluster
+
+  S3AuroraRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - DBCluster
+      - AuroraSecret
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AuroraFullAcces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'rds-data:BatchExecuteStatement'
+                  - 'rds-data:ExecuteStatement'
+                  - 'rds-data:BeginTransaction'
+                  - 'rds-data:CommitTransaction'
+                  - 'rds-data:RollbackTransaction'
+                Resource:
+                  - 'arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
+        - PolicyName: DBSecreatAcces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: 
+                  - !GetAtt 'AuroraSecret.Id'
+
 Outputs:
   StagingBucketName:
     Value: !Ref S3BucketStaging
     Description: Name of the staging ares s3 bucket.
+
+Parameters:
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for MySQL database access
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
