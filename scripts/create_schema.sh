@@ -18,23 +18,23 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
 # create dimension tables
 # create sensor table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE sensor IF NOT EXISTS (sensor_id INT PRIMARY KEY, sensor_type TEXT, sensor_name TEXT)"
+   --sql "CREATE TABLE IF NOT EXISTS sensor (sensor_id INT PRIMARY KEY, sensor_type TEXT, sensor_name TEXT)"
 
 # create time table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE time IF NOT EXISTS (time_id INT PRIMARY KEY, timestamp TIMESTAMPTZ, year SMALLINT, month SMALLINT, day_of_week SMALLINT, isweekend BOOLEAN)"
+   --sql "CREATE TABLE IF NOT EXISTS time (time_id INT PRIMARY KEY, timestamp TIMESTAMPTZ, year SMALLINT, month SMALLINT, day_of_week SMALLINT, isweekend BOOLEAN)"
 
 # create location table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE location IF NOT EXISTS (location_id INT PRIMARY KEY, latitude FLOAT, longitude FLOAT, city TEXT, country TEXT, state TEXT, zipcode TEXT, country TEXT, country_code TEXT, timezone TEXT)"
+   --sql "CREATE TABLE IF NOT EXISTS location (location_id INT PRIMARY KEY, latitude FLOAT, longitude FLOAT, city TEXT, country TEXT, state TEXT, zipcode TEXT, country_code TEXT, timezone TEXT)"
 
 # create fact tables
 # create temperature table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE temperature IF NOT EXISTS (
-      CONSTRAINT location_fk FOREIGN KEY (location_id) REFERENCES location(location_id),
-      CONSTRAINT time_fk FOREIGN KEY (time_id) REFERENCES time(time_id),
-      CONSTRAINT sensor_fk FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id)
+   --sql "CREATE TABLE IF NOT EXISTS temperature (
+      location_id INT  REFERENCES location(location_id),
+      time_id INT  REFERENCES time(time_id),
+      sensor_id INT  REFERENCES sensor(sensor_id),
       temperature FLOAT,
       humidity FLOAT,
       pressure FLOAT,
@@ -42,10 +42,10 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
 
 # create concentration table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE concentration IF NOT EXISTS (
-      CONSTRAINT location_fk FOREIGN KEY (location_id) REFERENCES location(location_id),
-      CONSTRAINT time_fk FOREIGN KEY (time_id) REFERENCES time(time_id),
-      CONSTRAINT sensor_fk FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id)
+   --sql "CREATE TABLE IF NOT EXISTS concentration(
+      location_id INT  REFERENCES location(location_id),
+      time_id INT  REFERENCES time(time_id),
+      sensor_id INT  REFERENCES sensor(sensor_id),
       p_1 FLOAT,
       p_2 FLOAT,
       PRIMARY KEY (location_id, time_id, sensor_id))"
