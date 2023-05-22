@@ -50,6 +50,7 @@ def read_data(filename: str, prefix: str) -> Dict:
     return dict(zip(header, values))
 
 def load_sensor_data(data: List[Dict]) -> None:
+    """insert data in sensors table with columns sensor_id, sensor_type"""
 
     sql = f"INSERT INTO sensor (sensor_id, sensor_type) VALUES (:sensor_id, :sensor_type)"
     params = []
@@ -62,6 +63,57 @@ def load_sensor_data(data: List[Dict]) -> None:
             {
                 "name": "sensor_type",
                 "value": {"stringValue": item["sensor_type"]},
+            },
+        ])
+    db.execute_statement(
+        resourceArn=aurora_arn,
+        secretArn=aurora_secret_arn,
+        database=database_name,
+        sql=sql,
+        parameters=params
+    )
+
+
+def load_location_data(data: List[Dict]) -> None:
+    """
+    insert data in location table with columns
+    location id, lat, lon, city, state, country, country_code, zipcode, timezone
+    """
+    sql = f"INSERT INTO location (location_id, lat, lon, city, state, country, zipcode, timezone) VALUES (:location_id, :lat, :lon, :city, :state, :country, :zipcode, :timezone)"
+    params = []
+    for item in data:
+        params.append([
+            {
+                "name": "location_id",
+                "value": {"longValue": item["location_id"]},
+            },
+            {
+                "name": "lat",
+                "value": {"doubleValue": item["lat"]},
+            },
+            {
+                "name": "lon",
+                "value": {"doubleValue": item["lon"]},
+            },
+            {
+                "name": "city",
+                "value": {"stringValue": item["city"]},
+            },
+            {
+                "name": "state",
+                "value": {"stringValue": item["state"]},
+            },
+            {
+                "name": "country",
+                "value": {"stringValue": item["country"]},
+            },
+            {
+                "name": "zipcode",
+                "value": {"stringValue": item["zipcode"]},
+            },
+            {
+                "name": "timezone",
+                "value": {"stringValue": item["timezone"]},
             },
         ])
     db.execute_statement(
