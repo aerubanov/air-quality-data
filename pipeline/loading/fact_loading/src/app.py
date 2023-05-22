@@ -116,6 +116,7 @@ def load_location_data(data: List[Dict]) -> None:
                 "value": {"stringValue": item["timezone"]},
             },
         ])
+    
     db.execute_statement(
         resourceArn=aurora_arn,
         secretArn=aurora_secret_arn,
@@ -123,6 +124,47 @@ def load_location_data(data: List[Dict]) -> None:
         sql=sql,
         parameters=params
     )
+
+
+def load_time_data(data: List[Dict]) -> None:
+    """
+    insert data in time table with columns
+    time_id, year, month, day_of_week, timestamp, isweekend
+    """
+    sql = f"INSERT INTO time (time_id, year, month, day_of_week, timestamp, isweekend) VALUES (:time_id, :year, :month, :day_of_week, :timestamp, :isweekend)"
+    params = []
+    for item in data:
+        params.append([
+            {
+                "name": "time_id",
+                "value": {"longValue": item["time_id"]},
+            },
+            {
+                "name": "year",
+                "value": {"longValue": item["year"]},
+            },
+            {
+                "name": "month",
+                "value": {"longValue": item["month"]},
+            },
+            {
+                "name": "day_of_week",
+                "value": {"longValue": item["day_of_week"]},
+            },
+            {
+                "name": "timestamp",
+                "value": {"stringValue": item["timestamp"]},
+                "typeHint": "TIMESTAMP"
+            },
+        ])
+    db.execute_statement(
+        resourceArn=aurora_arn,
+        secretArn=aurora_secret_arn,
+        database=database_name,
+        sql=sql,
+        parameters=params,
+    )
+
 
 
 if __name__ == "__main__":
