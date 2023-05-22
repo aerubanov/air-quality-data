@@ -18,7 +18,7 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
 # create dimension tables
 # create sensor table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE IF NOT EXISTS sensor (sensor_id INT PRIMARY KEY, sensor_type TEXT, sensor_name TEXT)"
+   --sql "CREATE TABLE IF NOT EXISTS sensor (sensor_id INT PRIMARY KEY, sensor_type TEXT)"
 
 # create time table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
