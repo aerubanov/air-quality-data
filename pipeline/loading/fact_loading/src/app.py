@@ -1,53 +1,47 @@
 import os
-import boto3
 from typing import Callable
+import boto3
 
-from loading import load_sensor_data, load_location_data, load_time_data
-
+from loading import load_temperature, load_concentration
 
 bucket = boto3.resource('s3').Bucket("transformed-bucket")
 data_dir = '/tmp/data'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
- 
+
 
 def handler(event, context):
-    data = []
-    print(event)
-    for item in event["Items"]:
-        key = item['Key']
-        filename = key.split('/')[-1]
-        prefix = key.split('/')[-2]
-        data.append(read_data(filename, prefix))
+    key = event['Key']
+    print(key)
+    filename = key.split('/')[-1]
+    prefix = key.split('/')[-2]
+    data = read_data(prefix, filename)
     loading_fn = select_loading_function(prefix)
     loading_fn(data)
     print(f"Successfully loaded {len(data)} records")
-    return {
-        "statusCode": 200,
-    }
 
 
 def select_loading_function(prefix: str) -> Callable:
     return {
-            "time": load_time_data,
-            "sensor": load_sensor_data,
-            "location": load_location_data,
-        }.get(prefix)
+            "temperature": load_temperature,
+            "concentration": load_concentration,
+    }.get(prefix)
 
 
-def read_data(filename: str, prefix: str) -> dict:
+def read_data(prefix: str, filename: str) -> list[dict]:
     bucket.download_file(prefix+'/'+filename, os.path.join(data_dir, filename))
     # read header and values from data file
     with open(os.path.join(data_dir, filename), 'r') as f:
         header = f.readline()
-        values = f.readline()
+        values = f.readlines()[1:]
     os.remove(os.path.join(data_dir, filename))
     header = header.replace('\n', '').split(',')
-    values = values.replace('\n', '').split(',')
-    return dict(zip(header, values))
-
+    values = [item.replace('\n', '').split(',') for item in values]
+    data = []
+    for item in values:
+        data.append(dict(zip(header, item)))
+    return data
 
 
 if __name__ == "__main__":
-    handler({"Items": [{"Key": "sensors/10006.csv"}]}, None)
-    
+    handler({"Key": "temperature/2023-03-01_10006.csv"}, None)

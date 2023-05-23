@@ -1,4 +1,3 @@
-from typing import List, Dict
 import boto3
 
 aurora_arn = 'arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
@@ -15,7 +14,7 @@ def get_secret_arn(secret_name = "aurora-secret"):
     return get_secret_value_response['ARN']
 
 
-def load_sensor_data(data: List[Dict]) -> None:
+def load_sensor_data(data: list[dict]) -> None:
     """insert data in sensors table with columns sensor_id, sensor_type"""
 
     sql = f"INSERT INTO sensor (sensor_id, sensor_type) VALUES (:sensor_id, :sensor_type)"
@@ -40,7 +39,7 @@ def load_sensor_data(data: List[Dict]) -> None:
     )
 
 
-def load_location_data(data: List[Dict]) -> None:
+def load_location_data(data: list[dict]) -> None:
     """
     insert data in location table with columns
     location id, lat, lon, city, state, country, country_code, zipcode, timezone
@@ -92,7 +91,7 @@ def load_location_data(data: List[Dict]) -> None:
     )
 
 
-def load_time_data(data: List[Dict]) -> None:
+def load_time_data(data: list[dict]) -> None:
     """
     insert data in time table with columns
     time_id, year, month, day_of_week, timestamp, isweekend
