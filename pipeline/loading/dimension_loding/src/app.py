@@ -30,8 +30,8 @@ def handler(event, context):
 def select_loading_function(prefix: str) -> Callable:
     return {
             "time": load_time_data,
-            "sensor": load_sensor_data,
-            "location": load_location_data,
+            "sensors": load_sensor_data,
+            "locations": load_location_data,
         }.get(prefix)
 
 
@@ -44,10 +44,29 @@ def read_data(filename: str, prefix: str) -> dict:
     os.remove(os.path.join(data_dir, filename))
     header = header.replace('\n', '').split(',')
     values = values.replace('\n', '').split(',')
+    print(header)
+    print(values)
     return dict(zip(header, values))
 
 
 
 if __name__ == "__main__":
-    handler({"Items": [{"Key": "sensors/10006.csv"}]}, None)
+    event = {
+    "Items": [
+    {
+      "Etag": "\"d300b278468dfe529c5ef02050edbc04\"",
+      "Key": "locations/10510.csv",
+      "LastModified": 1685463282,
+      "Size": 153,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Etag": "\"4fc44a21ed1c4a12582934d40a127d5e\"",
+      "Key": "locations/12223.csv",
+      "LastModified": 1685463279,
+      "Size": 135,
+      "StorageClass": "STANDARD"
+    },
+    ]}
+    handler(event, None)
     

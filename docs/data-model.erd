@@ -13,8 +13,8 @@ entity Temperature {
 
 entity Location {
    location_id: INT key
-   lat: FLOAT
-   lon: FLOAT
+   latitude: FLOAT
+   longitude: FLOAT
    city: TEXT
    state: TEXT
    country: TEXT

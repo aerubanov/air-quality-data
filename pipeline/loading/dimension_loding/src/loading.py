@@ -17,13 +17,13 @@ def get_secret_arn(secret_name = "aurora-secret"):
 def load_sensor_data(data: list[dict]) -> None:
     """insert data in sensors table with columns sensor_id, sensor_type"""
 
-    sql = f"INSERT INTO sensor (sensor_id, sensor_type) VALUES (:sensor_id, :sensor_type)"
+    sql = f"INSERT INTO sensor (sensor_id, sensor_type) VALUES (:sensor_id, :sensor_type) ON CONFLICT DO NOTHING"
     params = []
     for item in data:
         params.append([
             {
                 "name": "sensor_id",
-                "value": {"longValue": item["sensor_id"]},
+                "value": {"longValue": int(item["sensor_id"])},
             },
             {
                 "name": "sensor_type",
@@ -35,7 +35,7 @@ def load_sensor_data(data: list[dict]) -> None:
         secretArn=get_secret_arn(),
         database=database_name,
         sql=sql,
-        parameters=params
+        parameterSets=params
     )
 
 
@@ -44,21 +44,21 @@ def load_location_data(data: list[dict]) -> None:
     insert data in location table with columns
     location id, lat, lon, city, state, country, country_code, zipcode, timezone
     """
-    sql = f"INSERT INTO location (location_id, lat, lon, city, state, country, zipcode, timezone) VALUES (:location_id, :lat, :lon, :city, :state, :country, :zipcode, :timezone)"
+    sql = f"INSERT INTO location (location_id, latitude, longitude, city, state, country, zipcode, timezone) VALUES (:location_id, :latitude, :longitude, :city, :state, :country, :zipcode, :timezone) ON CONFLICT DO NOTHING"
     params = []
     for item in data:
         params.append([
             {
                 "name": "location_id",
-                "value": {"longValue": item["location_id"]},
+                "value": {"longValue": int(item["location_id"])},
             },
             {
-                "name": "lat",
-                "value": {"doubleValue": item["lat"]},
+                "name": "latitude",
+                "value": {"doubleValue": float(item["latitude"])},
             },
             {
-                "name": "lon",
-                "value": {"doubleValue": item["lon"]},
+                "name": "longitude",
+                "value": {"doubleValue": float(item["longitude"])},
             },
             {
                 "name": "city",
@@ -87,7 +87,7 @@ def load_location_data(data: list[dict]) -> None:
         secretArn=get_secret_arn(),
         database=database_name,
         sql=sql,
-        parameters=params
+        parameterSets=params
     )
 
 
@@ -96,25 +96,30 @@ def load_time_data(data: list[dict]) -> None:
     insert data in time table with columns
     time_id, year, month, day_of_week, timestamp, isweekend
     """
-    sql = f"INSERT INTO time (time_id, year, month, day_of_week, timestamp, isweekend) VALUES (:time_id, :year, :month, :day_of_week, :timestamp, :isweekend)"
+    print(data)
+    sql = f"INSERT INTO time (time_id, year, month, day_of_week, timestamp, isweekend) VALUES (:time_id, :year, :month, :day_of_week, :timestamp, :isweekend) ON CONFLICT DO NOTHING"
     params = []
     for item in data:
         params.append([
             {
                 "name": "time_id",
-                "value": {"longValue": item["time_id"]},
+                "value": {"longValue": int(item["time_id"])},
             },
             {
                 "name": "year",
-                "value": {"longValue": item["year"]},
+                "value": {"longValue": int(item["year"])},
             },
             {
                 "name": "month",
-                "value": {"longValue": item["month"]},
+                "value": {"longValue": int(item["month"])},
             },
             {
                 "name": "day_of_week",
-                "value": {"longValue": item["day_of_week"]},
+                "value": {"longValue": int(item["day_of_week"])},
+            },
+            {
+                "name": "isweekend",
+                "value": {"booleanValue": bool(item["day_of_week"] in ["5", "6"])},
             },
             {
                 "name": "timestamp",
@@ -128,5 +133,5 @@ def load_time_data(data: list[dict]) -> None:
         secretArn=get_secret_arn(),
         database=database_name,
         sql=sql,
-        parameters=params
+        parameterSets=params
     )
