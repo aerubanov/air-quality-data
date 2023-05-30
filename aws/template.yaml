@@ -448,6 +448,49 @@ Resources:
                   - 'secretsmanager:GetSecretValue'
                 Resource: 
                   - !GetAtt 'AuroraSecret.Id'
+        - PolicyName: S3write
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "ListObjectsInBucket"
+                Effect: Allow
+                Action: 
+                  - 's3:ListBucket'
+                Resource: 
+                  - 'arn:aws:s3:::transformed-bucket'
+              - Sid: "AllObjectActions"
+                Effect: Allow
+                Action: 
+                  - 's3:*Object'
+                Resource: 
+                  - 'arn:aws:s3:::transformed-bucket/*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # LOADING
+  FactLoader:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Load fact data
+      FunctionName: fact-loader
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/fact-loader:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3AuroraRole.Arn'
+      Timeout: 100
+
+  DimensionLoader:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Load dimension data
+      FunctionName: dimension-loader
+      Code: 
+        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/dimension-loader:latest
+      MemorySize: 512
+      PackageType: Image
+      Role: !GetAtt 'S3AuroraRole.Arn'
+      Timeout: 100
 
 Outputs:
   StagingBucketName:
