@@ -121,6 +121,7 @@ def write_time_to_s3(data: pd.DataFrame) -> str:
         if check_s3_file_exist(f"{time_id}.csv", prefix):
             continue
         with open(os.path.join(data_dir, f'{time_id}.csv'), 'w') as f:
+            f.write(','.join(columns)+"\n")
             f.write(','.join([str(row[col]) for col in columns])+"\n")
         target_bucket.upload_file(os.path.join(data_dir, f'{time_id}.csv'), prefix+f'{time_id}.csv')
         os.remove(os.path.join(data_dir, f'{time_id}.csv'))
