@@ -44,4 +44,11 @@ def read_data(prefix: str, filename: str) -> list[dict]:
 
 
 if __name__ == "__main__":
-    handler({"Key": "temperature/2023-03-01_10006.csv"}, None)
+    event = {
+        "Etag": "\"03cc82b72bbff71e31a2c5921ea5fbb1\"",
+        "Key": "temperature/2023-03-01_10460.csv",
+        "LastModified": 1685463267,
+        "Size": 24722,
+        "StorageClass": "STANDARD"
+        }
+    handler(event, None)

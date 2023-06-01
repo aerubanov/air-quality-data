@@ -13,7 +13,7 @@ def get_secret_arn(secret_name = "aurora-secret"):
     return get_secret_value_response['ARN']
 
 
-def write_temperature(data: list[dict]):
+def load_temperature(data: list[dict]):
     """
     insert data it temperature table with columns
     location_id, sensor_id, time_id, temperature, pressure, humidity
@@ -56,7 +56,7 @@ def write_temperature(data: list[dict]):
     )
 
 
-def write_concentration(data: list[dict]):
+def load_concentration(data: list[dict]):
     """
     write data in concentration table with columns
     location_id, sensor_id, time_id, p_1, p_2
