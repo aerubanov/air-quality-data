@@ -12,6 +12,7 @@ start_date = datetime.datetime(2015, 1, 1)
 data_dir = '/tmp/data'
 prefix = 'files/new/'
 data_colums = {'timestamp', 'temperature', 'humidity', 'pressure', 'P1', 'P2', 'sensor_id', 'location'}
+numeric_columns = ['temperature', 'humidity', 'pressure', 'P1', 'P2']
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
@@ -74,6 +75,10 @@ def filter_messurements(df: pd.DataFrame) -> pd.DataFrame:
 
 def extract_data(df: pd.DataFrame) -> Tuple[pd.DataFrame]:
     df = df[[col for col in df.columns if col in data_colums]]
+    for col in df.columns:
+        if col in numeric_columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    df.dropna(inplace=True)
     df = filter_messurements(df)
     df.set_index('timestamp', inplace=True)
     df = df.resample('1H').mean()
