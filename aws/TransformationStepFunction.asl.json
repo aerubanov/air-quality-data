@@ -107,12 +107,10 @@
           "Bucket": "staging-area-bucket",
           "Prefix": "files/new/"
         },
-        "ReaderConfig": {
-          "MaxItems": 100
-        }
+        "ReaderConfig": {}
       },
       "ItemBatcher": {
-        "MaxItemsPerBatch": 20
+        "MaxItemsPerBatch": 100
       }
     }
   }
