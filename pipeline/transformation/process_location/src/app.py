@@ -110,7 +110,7 @@ def get_location_info(latitude: float, longitude: float):
         }
 
 def get_timezone(latitude: float, longitude: float):
-    return tf.timezone_at(lng=latitude, lat=longitude)
+    return tf.timezone_at(lng=longitude, lat=latitude)
 
 def write_location_data_to_s3(location_id, timezone, data):
     with open(os.path.join(data_dir, f'{location_id}.csv'), 'w') as f:
