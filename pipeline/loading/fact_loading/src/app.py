@@ -54,10 +54,10 @@ def remove_s3_file(key: str) -> None:
 
 if __name__ == "__main__":
     event = {
-        "Etag": "\"03cc82b72bbff71e31a2c5921ea5fbb1\"",
-        "Key": "temperature/2023-03-01_10460.csv",
-        "LastModified": 1685463267,
-        "Size": 24722,
+        "Etag": "\"9fdcbe668473e764098ac7a00de10054\"",
+        "Key": "temperature/2023-03-01_67103.csv",
+        "LastModified": 1687196776,
+        "Size": 78666,
         "StorageClass": "STANDARD"
-        }
+    }
     handler(event, None)
