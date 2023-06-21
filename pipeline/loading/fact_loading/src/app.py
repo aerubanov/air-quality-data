@@ -48,7 +48,7 @@ def read_data(prefix: str, filename: str) -> list[dict]:
 
 
 def remove_s3_file(key: str) -> None:
-    delete = {"OBjects": [{"Key": key}]}
+    delete = {"Objects": [{"Key": key}]}
     bucket.delete_objects(Delete=delete)
 
 
