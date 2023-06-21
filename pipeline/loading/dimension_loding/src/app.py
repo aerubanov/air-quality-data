@@ -21,7 +21,10 @@ def handler(event, context):
         data.append(read_data(filename, prefix))
     loading_fn = select_loading_function(prefix)
     loading_fn(data)
-    print(f"Successfully loaded {len(data)} records")
+    print(f"Successfully loaded {len(data)} records into dimension table")
+    keys = [item["Key"] for item in event["Items"]]
+    remove_s3_files(keys)
+    print(f"Successfully removed {len(keys)} records from s3 bucket")
     return {
         "statusCode": 200,
     }
@@ -48,6 +51,11 @@ def read_data(filename: str, prefix: str) -> dict:
     print(values)
     return dict(zip(header, values))
 
+
+def remove_s3_files(keys: list[str]) -> None:
+    delete = {"Objects": [{"Key": key} for key in keys]}
+    bucket.delete_objects(Delete=delete)
+    
 
 
 if __name__ == "__main__":
