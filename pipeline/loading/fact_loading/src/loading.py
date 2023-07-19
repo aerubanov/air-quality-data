@@ -1,6 +1,9 @@
 import boto3
 
-aurora_arn = 'arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
+sts = boto3.client('sts')
+account_id = sts.get_caller_identity()['Account']
+region = sts.meta.region_name
+aurora_arn = f'arn:aws:rds:{region}:{account_id}:cluster:aurora-cluster'
 database_name = "postgres"
 db = boto3.client('rds-data')
 
