@@ -20,7 +20,7 @@ Resources:
       Description: Build file index to upload files from FTP server
       FunctionName: indexer-v-0-0-1
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/indexer:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/indexer:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'DynamoDBLambdaRole.Arn'
@@ -32,7 +32,7 @@ Resources:
       Description: List files from FTP server
       FunctionName: list-files-v-0-0-1
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/list-files:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/list-files:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
@@ -44,7 +44,7 @@ Resources:
       Description: Load files from FTP server to S3 bucket
       FunctionName: loader-v-0-0-1
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/loader:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/loader:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
@@ -56,7 +56,7 @@ Resources:
       Description: Mark folders in DynamoDB index as procesed
       FunctionName: index-marker-v-0-0-1
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/index-marker:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/index-marker:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
@@ -125,7 +125,7 @@ Resources:
                   - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:PutItem'
                   - 'dynamodb:UpdateItem'
-                Resource: 'arn:aws:dynamodb:eu-central-1:307660119800:table/folders'
+                Resource: 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/folders'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       RoleName: DynamoDBLambdaRole
@@ -173,7 +173,7 @@ Resources:
                   - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:PutItem'
                   - 'dynamodb:UpdateItem'
-                Resource: 'arn:aws:dynamodb:eu-central-1:307660119800:table/folders'
+                Resource: 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/folders'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       RoleName: DynamoDBS3LambdaRole
@@ -187,7 +187,7 @@ Resources:
       State: ENABLED
       Targets:
         - Id: Id83555565-723e-46d3-b5b5-39af9f7b23c7
-          Arn: arn:aws:lambda:eu-central-1:307660119800:function:indexer-v-0-0-1
+          Arn: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:indexer-v-0-0-1
 
   # Dynamo DB index table
   folders:
@@ -289,7 +289,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:*
-                Resource: 'arn:aws:dynamodb:eu-central-1:307660119800:table/folders'
+                Resource: 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/folders'
         - PolicyName: InvokeLambda
           PolicyDocument:
             Version: "2012-10-17"
@@ -324,7 +324,7 @@ Resources:
                 Action:
                   - states:StartExecution
                   - states:StopSyncExecution
-                Resource: 'arn:aws:states:*:307660119800:stateMachine:*'
+                Resource: 'arn:aws:states:*:${AWS::AccountId}:stateMachine:*'
 
   #TRANSFORMATION
   S3BucketTransformation:
@@ -344,7 +344,7 @@ Resources:
       Description: Process sensor measurements data
       FunctionName: data-processor
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/data-processor:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/data-processor:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
@@ -356,7 +356,7 @@ Resources:
       Description: Process location data
       FunctionName: location-processor
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/location-processor:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/location-processor:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
@@ -368,7 +368,7 @@ Resources:
       Description: Move files
       FunctionName: file-mover
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/file-mover:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/file-mover:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
@@ -447,7 +447,7 @@ Resources:
                   - 'rds-data:CommitTransaction'
                   - 'rds-data:RollbackTransaction'
                 Resource:
-                  - 'arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
+                  - 'arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:aurora-cluster'
         - PolicyName: DBSecreatAcces
           PolicyDocument:
             Version: "2012-10-17"
@@ -483,7 +483,7 @@ Resources:
       Description: Load fact data
       FunctionName: fact-loader
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/fact-loader:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/fact-loader:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'
@@ -495,7 +495,7 @@ Resources:
       Description: Load dimension data
       FunctionName: dimension-loader
       Code: 
-        ImageUri: 307660119800.dkr.ecr.eu-central-1.amazonaws.com/dimension-loader:latest
+        ImageUri: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dimension-loader:latest
       MemorySize: 512
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'

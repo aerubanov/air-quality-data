@@ -1,10 +1,13 @@
 #!/bin/bash
 # bash script to create tables in Aurora DB using AWS CLI
 
+account_id=$(aws sts get-caller-identity --query Account --output text)
+region=$(aws configure get region)
+
 set -e  # exit on error
 set -x  # print commands
 
-resource_arn='arn:aws:rds:eu-central-1:307660119800:cluster:aurora-cluster'
+resource_arn='arn:aws:rds:'$region':'$account_id':db:cluster:aurora-cluster'
 
 # get aurora-secret arn from aws secret manager
 secret_arn=$(aws secretsmanager get-secret-value --secret-id aurora-secret --query 'ARN' --output text)
