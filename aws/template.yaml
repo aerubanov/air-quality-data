@@ -258,7 +258,7 @@ Resources:
         ScaleInCooldown: 60
         TargetValue: 70
 
-  LoadingStepFunction:
+  ExtractionStepFunction:
     Type: AWS::StepFunctions::StateMachine
     Properties:
       DefinitionS3Location:
