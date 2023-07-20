@@ -18,7 +18,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: Build file index to upload files from FTP server
-      FunctionName: indexer-v-0-0-1
+      FunctionName: indexer
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/indexer:latest'
       MemorySize: 512
@@ -30,7 +30,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: List files from FTP server
-      FunctionName: list-files-v-0-0-1
+      FunctionName: list-files
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/list-files:latest'
       MemorySize: 512
@@ -42,7 +42,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: Load files from FTP server to S3 bucket
-      FunctionName: loader-v-0-0-1
+      FunctionName: loader
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/loader:latest'
       MemorySize: 512
@@ -54,7 +54,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: Mark folders in DynamoDB index as procesed
-      FunctionName: index-marker-v-0-0-1
+      FunctionName: index-marker
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/index-marker:latest'
       MemorySize: 512
@@ -184,10 +184,10 @@ Resources:
       EventBusName: default
       Name: indexer-schedule
       ScheduleExpression: rate(24 hours)
-      State: ENABLED
+      State: DISABLED
       Targets:
         - Id: Id83555565-723e-46d3-b5b5-39af9f7b23c7
-          Arn: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:indexer-v-0-0-1'
+          Arn: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:indexer'
 
   # Dynamo DB index table
   folders:
