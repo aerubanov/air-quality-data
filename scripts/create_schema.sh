@@ -7,7 +7,7 @@ region=$(aws configure get region)
 set -e  # exit on error
 set -x  # print commands
 
-resource_arn='arn:aws:rds:'$region':'$account_id':db:cluster:aurora-cluster'
+resource_arn='arn:aws:rds:'$region':'$account_id':cluster:aurora-cluster'
 
 # get aurora-secret arn from aws secret manager
 secret_arn=$(aws secretsmanager get-secret-value --secret-id aurora-secret --query 'ARN' --output text)
