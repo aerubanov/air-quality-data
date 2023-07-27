@@ -1,6 +1,7 @@
 import httpx
 from bs4 import BeautifulSoup
 import re
+import datetime
 import boto3
 
 dynamodb = boto3.resource('dynamodb')
@@ -8,6 +9,7 @@ folders_table = dynamodb.Table('folders')
 
 base_url = "https://archive.sensor.community/"
 link_pattern = re.compile('\d\d\d\d-\d\d-\d\d/')
+nested_link_pattern = re.compile('\d\d\d\d/\d\d\d\d-\d\d-\d\d/')
 
 headers = {
     "Host": "archive.sensor.community",
@@ -33,7 +35,9 @@ nested_folders = [
 def handler(event, context):
     print(f"Event: {event}")
     print(f"Context: {context}")
-    build_index()
+    start_date = datetime.datetime.strptime(event["startDate"], "%Y-%m-%d")
+    end_date = datetime.datetime.strptime(event["endDate"], "%Y-%m-%d")
+    build_index(start_date, end_date)
 
 
 def get_folders_list():
@@ -46,22 +50,30 @@ def get_folders_list():
     return [item["folder"] for item in data]
 
 
-def build_index():
-    """Collect file index and upload it on S3. Using multithreading"""
+def get_links():
     resp = httpx.get(base_url, headers=headers, timeout=120)
+    print(resp.status_code)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))]
 
-    # uncomment this lines to download data for previeous years
-    # for folder in nested_folders:
-    #     resp = httpx.get(base_url + folder, headers=headers, timeout=120)
-    #     print(resp)
-    #     soup = BeautifulSoup(resp.text, 'lxml')
-    #     links.extend([folder+link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))])
+    # get data for previous years
+    for folder in nested_folders:
+        resp = httpx.get(base_url + folder, headers=headers, timeout=120)
+        print(folder)
+        print(resp.status_code)
+        soup = BeautifulSoup(resp.text, 'lxml')
+        links.extend([folder+link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))])
+    return links
 
+
+def build_index(start_date: datetime.datetime, end_date: datetime.datetime):
+    """Collect file index and upload it on S3. Using multithreading"""
+    resp = httpx.get(base_url, headers=headers, timeout=120)
+    soup = BeautifulSoup(resp.text, 'lxml')
+    links = get_links()
     checked_folders=set(get_folders_list())
     links = [i for i in links if i not in checked_folders]
-    links = [i for i in links if check_link(i)]
+    links = [i for i in links if check_link(i, start_date, end_date)]
     print(f"{len(links)} new links")
     if len(links) == 0:
         print("Index is up to date, nothing to download")
@@ -76,17 +88,24 @@ def build_index():
             batch.put_item(Item=item)
 
 
-def check_link(link: str) -> bool:
+def check_link(link: str, start_date: datetime.datetime, end_date: datetime.datetime) -> bool:
     "check link format"
-    if not link_pattern.match(link):
+    if link_pattern.match(link):
+        date = datetime.datetime.strptime(link.replace('/', ''), "%Y-%m-%d")
+    elif nested_link_pattern.match(link):
+        date = datetime.datetime.strptime(link.split('/')[1], "%Y-%m-%d")
+    else:
         return False
-    
     # download data only for March
-    if '-03-' not in link:
+    if date < start_date or date > end_date:
         return False
 
     return True
 
 
 if __name__ == "__main__":
-    build_index()
+    handler({
+        "startDate": "2022-03-01",
+        "endDate": "2022-03-31",
+    },
+    N)
