@@ -5,7 +5,7 @@ import httpx
 from threading import Thread
 
 s3 = boto3.client("s3")
-bucket = "staging-area-bucket" #TODO: get from env var
+bucket = os.environ["S3_BUCKET"]
 
 index_folder = "file_index/new/"
 processed_folder = "file_index/processed/"

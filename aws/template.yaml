@@ -5,7 +5,7 @@ Resources:
   S3BucketStaging:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: staging-area-bucket
+      BucketName: !Ref StagingAreaBucketName
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -37,6 +37,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
       Timeout: 300
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref StagingAreaBucketName
 
   Loader:
     Type: AWS::Lambda::Function
@@ -49,6 +52,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 900
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref StagingAreaBucketName
 
   IndexMarker:
     Type: AWS::Lambda::Function
@@ -330,7 +336,7 @@ Resources:
   S3BucketTransformation:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: transformed-bucket
+      BucketName: !Ref TransformationBucketName
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -533,3 +539,13 @@ Parameters:
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+  StagingAreaBucketName:
+    Description: Name of the staging ares s3 bucket.
+    Type: String
+    MinLength: '3'
+    MaxLength: '63'
+  TransformationBucketName:
+    Description: Name of the transformation s3 bucket.
+    Type: String
+    MinLength: '3'
+    MaxLength: '63'
