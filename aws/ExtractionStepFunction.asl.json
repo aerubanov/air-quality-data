@@ -1,7 +1,30 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Add empty LastEvaluatedKey",
+  "StartAt": "Build index",
   "States": {
+    "Build index": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:eu-central-1:307660119800:function:indexer:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Add empty LastEvaluatedKey"
+    },
     "Add empty LastEvaluatedKey": {
       "Type": "Pass",
       "Next": "Scan",
