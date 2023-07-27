@@ -6,7 +6,8 @@ import boto3
 import time
 
 base_url = "https://archive.sensor.community/"
-backet = boto3.resource("s3").Bucket("staging-area-bucket")
+backet_name = os.environ["S3_BUCKET"]
+backet = boto3.resource("s3").Bucket(backet_name)
 folder = "file_list/"
 data_dir = "/tmp/data/"
 headers = {
