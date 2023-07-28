@@ -91,14 +91,14 @@ Resources:
                 Action: 
                   - 's3:ListBucket'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}'
                   - 'arn:aws:s3:::transformed-bucket'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket/*'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}/*'
                   - 'arn:aws:s3:::transformed-bucket/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -159,13 +159,13 @@ Resources:
                 Action:
                   - 's3:ListBucket'
                 Resource:
-                  - 'arn:aws:s3:::staging-area-bucket'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action:
                   - 's3:*Object'
                 Resource:
-                  - 'arn:aws:s3:::staging-area-bucket/*'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}/*'
         - PolicyName: DynamoDBwrite
           PolicyDocument:
             Version: "2012-10-17"
@@ -313,14 +313,14 @@ Resources:
                 Action: 
                   - 's3:ListBucket'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}'
                   - 'arn:aws:s3:::transformed-bucket'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket/*'
+                  - 'arn:aws:s3:::${Fn::Ref 'StagingAreaBucketName'}/*'
                   - 'arn:aws:s3:::transformed-bucket/*'
         - PolicyName: StepFunctionStartExecution
           PolicyDocument:
