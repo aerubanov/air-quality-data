@@ -17,8 +17,8 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
    --sql "SELECT *FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'"
 
 # drop tables
-#aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-#   --sql "DROP TABLE IF EXISTS temperature, concentration, location, sensor, time"
+aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
+   --sql "DROP TABLE IF EXISTS temperature, concentration, location, sensor, time"
 
 
 # create schema

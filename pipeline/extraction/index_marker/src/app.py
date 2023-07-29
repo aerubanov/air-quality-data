@@ -38,7 +38,7 @@ def handler(event, context):
     print(f"Folder: {folder}")
      
     mark_folder(folder)
-    clear_file_list(folder)
+    clear_file_list(folder, bucket_name)
 
 
 def mark_folder(folder: str):
@@ -55,9 +55,9 @@ def mark_folder(folder: str):
     )
     print(f"Marked folder {folder} as processed")
     
-def clear_file_list(folder):
+def clear_file_list(folder, bucket_name):
     prefix = "file_list/"
-    bucket = boto3.resource("s3").Bucket("staging-area-bucket")
+    bucket = boto3.resource("s3").Bucket(bucket_name)
     bucket.delete_objects(
         Delete={
             'Objects': [

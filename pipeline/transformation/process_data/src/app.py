@@ -6,8 +6,10 @@ from typing import Tuple
 import botocore
 
 s3 = boto3.resource('s3')
-source_bucket = boto3.resource('s3').Bucket("staging-area-bucket")
-target_bucket = boto3.resource('s3').Bucket("transformed-bucket")
+source_bucket_name = os.environ['SOURCE_BUCKET']
+target_bucket_name = os.environ['TARGET_BUCKET']
+source_bucket = boto3.resource('s3').Bucket(source_bucket_name)
+target_bucket = boto3.resource('s3').Bucket(target_bucket_name)
 start_date = datetime.datetime(2015, 1, 1)
 data_dir = '/tmp/data'
 prefix = 'files/new/'
@@ -137,7 +139,7 @@ def write_time_to_s3(data: pd.DataFrame) -> str:
 
 def check_s3_file_exist(filename: str, prefix: str) -> bool:
     try:
-        s3.Object("transformed-bucket", prefix+filename).load()
+        s3.Object(target_bucket_name, prefix+filename).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             # The object does not exist.

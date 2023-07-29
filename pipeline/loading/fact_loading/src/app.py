@@ -4,7 +4,8 @@ import boto3
 
 from loading import load_temperature, load_concentration
 
-bucket = boto3.resource('s3').Bucket("transformed-bucket")
+bucket_name = os.environ['S3_BUCKET']
+bucket = boto3.resource('s3').Bucket(bucket_name)
 data_dir = '/tmp/data'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)

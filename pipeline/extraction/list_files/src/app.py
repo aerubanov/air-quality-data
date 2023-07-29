@@ -34,7 +34,7 @@ def handler(event, context):
     os.remove(data_dir+data_object)
     return {
         "FileListFile": folder+data_object,
-        "Bucket": "staging-area-bucket",
+        "Bucket": backet_name,
         }
 
 
@@ -54,6 +54,7 @@ def list_files(link):
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
     files = [item for item in links if '.csv' in item]
+    files = [item for item in files if 'indoor' not in item]
     return [url+file for file in files]
 
 
