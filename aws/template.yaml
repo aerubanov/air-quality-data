@@ -304,7 +304,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: '*'
-        - PolicyName: S3FullAccesg
+        - PolicyName: S3FullAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -489,7 +489,7 @@ Resources:
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::${TransformationBucketName}/*'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
@@ -507,7 +507,7 @@ Resources:
       Timeout: 100
       Environment:
         Variables:
-          S3_Bucket: !Ref TransformationBucketName
+          S3_BUCKET: !Ref TransformationBucketName
 
   DimensionLoader:
     Type: AWS::Lambda::Function
@@ -522,7 +522,7 @@ Resources:
       Timeout: 100
       Environment:
         Variables:
-          S3_Bucket: !Ref TransformationBucketName
+          S3_BUCKET: !Ref TransformationBucketName
 
   LoadingStepFunction:
     Type: AWS::StepFunctions::StateMachine
