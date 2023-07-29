@@ -3,11 +3,13 @@ import boto3
 import geopy
 import botocore
 from timezonefinder import TimezoneFinder
+import time
 
 s3 = boto3.resource('s3')
-source_bucket = s3.Bucket("staging-area-bucket")
-target_bucket = s3.Bucket("transformed-bucket")
-geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
+source_bucket_name = os.environ['SOURCE_BUCKET']
+target_bucket_name = os.environ['TARGET_BUCKET']
+source_bucket = s3.Bucket(source_bucket_name)
+target_bucket = s3.Bucket(target_bucket_name)
 data_dir = '/tmp/data'
 prefix = 'files/new/'
 target_prefix_sensors = 'sensors/'
@@ -43,7 +45,7 @@ def handler(event, context):
 
 def check_s3_file_exist(filename: str, prefix: str) -> bool:
     try:
-        s3.Object("transformed-bucket", prefix+filename).load()
+        s3.Object(target_bucket_name, prefix+filename).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             # The object does not exist.
@@ -92,7 +94,18 @@ def get_sensor_info(filename: str) -> dict:
 
 
 def get_location_info(latitude: float, longitude: float):
-    location = geolocator.reverse(f"{latitude}, {longitude}", language='en')
+    geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
+    error_count = 0
+    while True:
+        try:
+            location = geolocator.reverse(f"{latitude}, {longitude}", language='en')
+            break
+        except geopy.exc.GeocoderServerError:
+            error_count += 1
+            if error_count > 3:
+                raise
+            time.sleep(4^error_count)
+
     address = location.raw['address']
     city = address.get('city', '')
     state = address.get('state', '')
