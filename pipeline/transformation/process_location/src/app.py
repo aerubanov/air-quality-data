@@ -1,6 +1,7 @@
 import os
 import boto3
 import geopy
+from geopy.exc import GeocoderServiceError
 import botocore
 from timezonefinder import TimezoneFinder
 import time
@@ -100,7 +101,7 @@ def get_location_info(latitude: float, longitude: float):
         try:
             location = geolocator.reverse(f"{latitude}, {longitude}", language='en')
             break
-        except geopy.exc.GeocoderServerError:
+        except GeocoderServiceError:
             error_count += 1
             if error_count > 3:
                 raise
