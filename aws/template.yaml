@@ -5,7 +5,7 @@ Resources:
   S3BucketStaging:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: staging-area-bucket
+      BucketName: !Ref StagingAreaBucketName
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -37,6 +37,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
       Timeout: 300
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref StagingAreaBucketName
 
   Loader:
     Type: AWS::Lambda::Function
@@ -49,6 +52,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 900
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref StagingAreaBucketName
 
   IndexMarker:
     Type: AWS::Lambda::Function
@@ -85,15 +91,15 @@ Resources:
                 Action: 
                   - 's3:ListBucket'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket'
-                  - 'arn:aws:s3:::transformed-bucket'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket/*'
-                  - 'arn:aws:s3:::transformed-bucket/*'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}/*'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       RoleName: S3LambdaRole
@@ -153,13 +159,13 @@ Resources:
                 Action:
                   - 's3:ListBucket'
                 Resource:
-                  - 'arn:aws:s3:::staging-area-bucket'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action:
                   - 's3:*Object'
                 Resource:
-                  - 'arn:aws:s3:::staging-area-bucket/*'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}/*'
         - PolicyName: DynamoDBwrite
           PolicyDocument:
             Version: "2012-10-17"
@@ -298,7 +304,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: '*'
-        - PolicyName: S3FullAccesg
+        - PolicyName: S3FullAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -307,15 +313,15 @@ Resources:
                 Action: 
                   - 's3:ListBucket'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket'
-                  - 'arn:aws:s3:::transformed-bucket'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::staging-area-bucket/*'
-                  - 'arn:aws:s3:::transformed-bucket/*'
+                  - !Sub 'arn:aws:s3:::${StagingAreaBucketName}/*'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}/*'
         - PolicyName: StepFunctionStartExecution
           PolicyDocument:
             Version: "2012-10-17"
@@ -330,7 +336,7 @@ Resources:
   S3BucketTransformation:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: transformed-bucket
+      BucketName: !Ref TransformationBucketName
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -349,6 +355,10 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
+      Environment:
+        Variables:
+          SOURCE_BUCKET: !Ref StagingAreaBucketName
+          TARGET_BUCKET: !Ref TransformationBucketName
 
   LocationProcessor:
     Type: AWS::Lambda::Function
@@ -361,6 +371,10 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
+      Environment:
+        Variables:
+          SOURCE_BUCKET: !Ref StagingAreaBucketName
+          TARGET_BUCKET: !Ref TransformationBucketName
 
   FileMover:
     Type: AWS::Lambda::Function
@@ -373,6 +387,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref StagingAreaBucketName
 
   TransformationStepFunction:
     Type: AWS::StepFunctions::StateMachine
@@ -466,13 +483,13 @@ Resources:
                 Action: 
                   - 's3:ListBucket'
                 Resource: 
-                  - 'arn:aws:s3:::transformed-bucket'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}'
               - Sid: "AllObjectActions"
                 Effect: Allow
                 Action: 
                   - 's3:*Object'
                 Resource: 
-                  - 'arn:aws:s3:::transformed-bucket/*'
+                  - !Sub 'arn:aws:s3:::${TransformationBucketName}/*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
@@ -488,6 +505,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'
       Timeout: 100
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref TransformationBucketName
 
   DimensionLoader:
     Type: AWS::Lambda::Function
@@ -500,6 +520,9 @@ Resources:
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'
       Timeout: 100
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref TransformationBucketName
 
   LoadingStepFunction:
     Type: AWS::StepFunctions::StateMachine
@@ -533,3 +556,15 @@ Parameters:
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+  StagingAreaBucketName:
+    Description: Name of the staging ares s3 bucket.
+    Type: String
+    MinLength: '3'
+    MaxLength: '63'
+    Default: 'staging-area-bucket'
+  TransformationBucketName:
+    Description: Name of the transformation s3 bucket.
+    Type: String
+    MinLength: '3'
+    MaxLength: '63'
+    Default: 'transformed-bucket'

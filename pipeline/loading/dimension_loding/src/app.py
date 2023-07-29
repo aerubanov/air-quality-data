@@ -4,8 +4,8 @@ from typing import Callable
 
 from loading import load_sensor_data, load_location_data, load_time_data
 
-
-bucket = boto3.resource('s3').Bucket("transformed-bucket")
+bucket_name = os.environ['S3_BUCKET']
+bucket = boto3.resource('s3').Bucket(bucket_name)
 data_dir = '/tmp/data'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)

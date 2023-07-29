@@ -6,7 +6,8 @@ import boto3
 import time
 
 base_url = "https://archive.sensor.community/"
-backet = boto3.resource("s3").Bucket("staging-area-bucket")
+backet_name = os.environ["S3_BUCKET"]
+backet = boto3.resource("s3").Bucket(backet_name)
 folder = "file_list/"
 data_dir = "/tmp/data/"
 headers = {
@@ -33,7 +34,7 @@ def handler(event, context):
     os.remove(data_dir+data_object)
     return {
         "FileListFile": folder+data_object,
-        "Bucket": "staging-area-bucket",
+        "Bucket": backet_name,
         }
 
 
@@ -53,6 +54,7 @@ def list_files(link):
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
     files = [item for item in links if '.csv' in item]
+    files = [item for item in files if 'indoor' not in item]
     return [url+file for file in files]
 
 

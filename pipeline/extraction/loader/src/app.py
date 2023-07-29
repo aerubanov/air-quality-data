@@ -5,7 +5,7 @@ import httpx
 from threading import Thread
 
 s3 = boto3.client("s3")
-bucket = "staging-area-bucket" #TODO: get from env var
+bucket = os.environ["S3_BUCKET"]
 
 index_folder = "file_index/new/"
 processed_folder = "file_index/processed/"
@@ -28,7 +28,7 @@ def job(func, data):
 
 
 def process_in_threads(data: list, func: callable, n_threads: int) -> list:
-    if n_threads > 1:
+    if len(data) > n_threads:
         chunk_size = round(len(data)/n_threads)
         chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
     else:
@@ -55,11 +55,12 @@ def handler(event, context):
 
 
 def validate_data(data: list) -> bool:
-    columns = ['sensor_id', 'timestamp', 'lat', 'lon']
+    columns = ['sensor_id', 'timestamp', 'lat', 'lon', 'location', 'timestamp', 'sensor_type']
     header = data.split("\n")[0]
     header = header.split(";")
     for col in columns:
         if col not in header:
+            print(f"Invalid column: {col}")
             return False
     return True
 
@@ -92,19 +93,12 @@ def load_file(link: str):
 if __name__ == "__main__":
     #load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")
     load_file('https://archive.sensor.community/2022/2022-01-01/2022-01-01_sps30_sensor_68925.csv')
-    # event = {
-    # "Items": [
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_78883.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_78914.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79031.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79060.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79112.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79186.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79188.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79199.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79223.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79235_indoor.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79246.csv",
-    # "https://archive.sensor.community/2023-03-21/2023-03-21_sps30_sensor_79300.csv"
-    # ]}
-    # handler(event, None)
+    event = {
+        "Items": [
+            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79564.csv",
+            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79576.csv",
+            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79588.csv",
+            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79685.csv"
+        ]
+    }
+    handler(event, None)

@@ -1,6 +1,7 @@
+import os
 import boto3
 
-
+backet_name = os.environ["S3_BUCKET"]
 s3 = boto3.resource('s3')
 source_folder = 'files/new/'
 target_folder = 'files/processed/'
@@ -25,10 +26,10 @@ def handler(event, context):
 
 def move_file(filename: str):
     """Move file from source folder to turget folder in S3 bucket"""
-    s3.Object('staging-area-bucket', target_folder+filename).copy_from(
+    s3.Object(backet_name, target_folder+filename).copy_from(
         CopySource={
-            'Bucket': 'staging-area-bucket',
+            'Bucket': backet_name,
             'Key': source_folder+filename,
         },
     )
-    s3.Object('staging-area-bucket', source_folder+filename).delete()
+    s3.Object(backet_name, source_folder+filename).delete()
