@@ -55,7 +55,7 @@ def handler(event, context):
 
 
 def validate_data(data: list) -> bool:
-    columns = ['sensor_id', 'timestamp', 'lat', 'lon']
+    columns = ['sensor_id', 'timestamp', 'lat', 'lon', 'location', 'timestamp', 'sensor_type'], 
     header = data.split("\n")[0]
     header = header.split(";")
     for col in columns:
