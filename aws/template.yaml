@@ -12,6 +12,15 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: GlacierRule
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA
+                TransitionInDays: 30
+              - StorageClass: GLACIER_IR
+                TransitionInDays: 90
     DeletionPolicy: Retain
   
   Indexer:
@@ -342,6 +351,11 @@ Resources:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpirationRule
+            Status: Enabled
+            ExpirationInDays: 30
     DeletionPolicy: Retain
 
   DataProcessor:
