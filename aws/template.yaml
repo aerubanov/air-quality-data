@@ -1,6 +1,17 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: AWS CloudFormation Template to create resources for ETL pipline.
 Resources:
+
+  ETLStepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: ETLStepFunction
+      DefinitionS3Location:
+        Bucket: stepfunc-defenition
+        Key: StepFunction.asl.json
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      StateMachineType: STANDARD
+
   # EXTRACTION
   S3BucketStaging:
     Type: AWS::S3::Bucket
@@ -273,16 +284,6 @@ Resources:
         ScaleInCooldown: 60
         TargetValue: 70
 
-  ExtractionStepFunction:
-    Type: AWS::StepFunctions::StateMachine
-    Properties:
-      DefinitionS3Location:
-        Bucket: stepfunc-defenition
-        Key: ExtractionStepFunction.asl.json
-      RoleArn: !GetAtt StepFunctionRole.Arn
-      StateMachineName: ExtractionStepFunction
-      StateMachineType: STANDARD
-
   StepFunctionRole:
     Type: AWS::IAM::Role
     Properties: 
@@ -404,16 +405,6 @@ Resources:
       Environment:
         Variables:
           S3_BUCKET: !Ref StagingAreaBucketName
-
-  TransformationStepFunction:
-    Type: AWS::StepFunctions::StateMachine
-    Properties:
-      DefinitionS3Location:
-        Bucket: stepfunc-defenition
-        Key: TransformationStepFunction.asl.json
-      RoleArn: !GetAtt StepFunctionRole.Arn
-      StateMachineName: TransformationStepFunction
-      StateMachineType: STANDARD
 
   #AWS AURORA DATABASE
   DBCluster:
@@ -537,16 +528,6 @@ Resources:
       Environment:
         Variables:
           S3_BUCKET: !Ref TransformationBucketName
-
-  LoadingStepFunction:
-    Type: AWS::StepFunctions::StateMachine
-    Properties:
-      DefinitionS3Location:
-        Bucket: stepfunc-defenition
-        Key: LoadingStepFunction.asl.json
-      RoleArn: !GetAtt StepFunctionRole.Arn
-      StateMachineName: LoadingStepFunction
-      StateMachineType: STANDARD
 
 Outputs:
   StagingBucketName:
