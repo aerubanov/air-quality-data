@@ -43,6 +43,7 @@ entity Time {
 entity Sensor{
    sensor_id: INT key
    sensor_type: TEXT
+   is_indoor: BOOL
 }
 
 relationship Rel1 {
