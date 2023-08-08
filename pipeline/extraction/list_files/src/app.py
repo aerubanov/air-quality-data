@@ -26,8 +26,9 @@ def handler(event, context):
     print(link)
     data_object = link[:-1]+".json"
     files = list_files(link)
-    if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
+    path = data_dir+"/".join(data_object.split("/")[:-1])
+    if not os.path.exists(path):
+        os.makedirs(path)
     with open(data_dir+data_object, 'w') as f:
         json.dump(files, f)
     backet.upload_file(data_dir+data_object, folder+data_object)
