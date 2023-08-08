@@ -17,8 +17,8 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
    --sql "SELECT *FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'"
 
 # drop tables
-#aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-#   --sql "DROP TABLE IF EXISTS temperature, concentration, location, sensor, time"
+aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
+   --sql "DROP TABLE IF EXISTS temperature, concentration, location, sensor, time"
 
 
 # create schema
@@ -26,7 +26,7 @@ aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret
 # create dimension tables
 # create sensor table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
-   --sql "CREATE TABLE IF NOT EXISTS sensor (sensor_id INT PRIMARY KEY, sensor_type TEXT)"
+   --sql "CREATE TABLE IF NOT EXISTS sensor (sensor_id INT PRIMARY KEY, sensor_type TEXT, is_indoor BOOLEAN)"
 
 # create time table
 aws rds-data execute-statement --resource-arn $resource_arn --secret-arn $secret_arn --database "postgres" \
