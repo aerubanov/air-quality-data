@@ -20,7 +20,7 @@ def get_secret_arn(secret_name = "aurora-secret"):
 def load_sensor_data(data: list[dict]) -> None:
     """insert data in sensors table with columns sensor_id, sensor_type"""
 
-    sql = f"INSERT INTO sensor (sensor_id, sensor_type) VALUES (:sensor_id, :sensor_type) ON CONFLICT DO NOTHING"
+    sql = f"INSERT INTO sensor (sensor_id, sensor_type, is_indoor) VALUES (:sensor_id, :sensor_type, :is_indoor) ON CONFLICT DO NOTHING"
     params = []
     for item in data:
         params.append([
@@ -32,6 +32,10 @@ def load_sensor_data(data: list[dict]) -> None:
                 "name": "sensor_type",
                 "value": {"stringValue": item["sensor_type"]},
             },
+            {
+                "name": "is_indoor",
+                "value": {"booleanValue": item["is_indoor"]=="true"},
+            }
         ])
     db.batch_execute_statement(
         resourceArn=aurora_arn,
