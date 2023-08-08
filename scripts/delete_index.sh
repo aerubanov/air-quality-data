@@ -7,10 +7,8 @@ table_name=folders
 
 aws dynamodb describe-table --table-name $table_name | jq '.Table | del(.TableId, .TableArn, .ItemCount, .TableSizeBytes, .CreationDateTime, .TableStatus, .ProvisionedThroughput.NumberOfDecreasesToday)' > schema.json
 # delete the table
-# aws dynamodb delete-table --table-name $table_name
+#aws dynamodb delete-table --table-name $table_name
 # wait 10 seconds
 # sleep 10
 # create table with the same schema
 # aws dynamodb create-table --cli-input-json file://schema.json
-# delete schema.json
-# rm schema.json

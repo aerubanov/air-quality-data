@@ -54,7 +54,6 @@ def list_files(link):
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
     files = [item for item in links if '.csv' in item]
-    files = [item for item in files if 'indoor' not in item]
     return [url+file for file in files]
 
 
