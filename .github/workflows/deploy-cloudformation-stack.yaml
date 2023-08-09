@@ -1,0 +1,59 @@
+name: CloudFormation deploy
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'aws/template.yaml'
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      DB_USERNAME:
+        required: true
+      DB_PASSWORD:
+        required: true
+      STAGING_AREA_BUCKET:
+        required: true
+      TRANSFORMATION_BUCKET:
+        required: true
+      STEP_FUNCTION_BUCKET:
+        required: true
+      AWS_ACCOUNT_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION}}
+      - name: Replace account_id and region
+        run: |
+          sed -i "s/307660119800/${{ secrets.AWS_ACCOUNT_ID }}/g" aws/StepFunction.asl.json
+          sed -i "s/eu-central-1/${{ secrets.AWS_REGION }}/g" aws/StepFunction.asl.json
+      - name: Upload step function defenition to S3
+        run: |
+          aws s3 cp aws/StepFunction.asl.json s3://${{ secrets.STEP_FUNCTION_BUCKET }}/
+      - name: Deploy CloudFormation stack
+        uses: aws-actions/aws-cloudformation-github-deploy@master
+        with:
+          name: AirDataETL
+          template: aws/template.yaml
+          capabilities: "CAPABILITY_NAMED_IAM"
+          parameter-overrides: >-
+            DBUsername=${{ secrets.DB_USERNAME }},
+            DBPassword=${{ secrets.DB_PASSWORD }},
+            StagingAreaBucketName=${{ secrets.STAGING_AREA_BUCKET }},
+            TransformationBucketName=${{ secrets.TRANSFORMATION_BUCKET }}
+            StepFunctionBucketName=${{ secrets.STEP_FUNCTION_BUCKET }}
