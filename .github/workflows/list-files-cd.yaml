@@ -37,4 +37,4 @@ jobs:
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
           ECR_REPOSITORY: list-files
         run: |
-          aws lambda update-function-code --image-uri $ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:latest
+          aws lambda update-function-code --image-uri $ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:latest
