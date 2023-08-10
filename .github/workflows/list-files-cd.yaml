@@ -20,14 +20,15 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Go to list-files folder
-        run: cd pipeline/extraction/list-files/
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: list-files
           IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pipeline/extraction/list_files/Dockerfile
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: Update AWS Lambda function
         run: |
           aws lambda update-function-code --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
