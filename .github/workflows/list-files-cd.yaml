@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'pipeline/extraction/list_files/**'
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
