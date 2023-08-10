@@ -1,11 +1,13 @@
 name: loader-cd
-run-name: Deploy Loader lambda
+run-name: Deploy loader lambda
 on: 
   push:
     branches:
       - main
     paths:
-      - 'pipeline/extraction/loader/**'
+      - 'pipeline/extraction/list_files/**'
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,21 +18,23 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-central-1
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Go to loader folder
-        run: cd pipeline/extraction/loader/
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: loader
+          ACCAUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          ECR_REPOSITORY: list-files
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG pipeline/extraction/loader/
+          docker push $ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:latest
       - name: Update AWS Lambda function
+        id: update-function
+        env:
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          ECR_REPOSITORY: list-files
         run: |
-          aws lambda update-function-code --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          aws lambda update-function-code --function-name list-files --image-uri $ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:latest
