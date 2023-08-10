@@ -29,7 +29,7 @@ jobs:
           ECR_REPOSITORY: list-files
           IMAGE_TAG: latest
         run: |
-          docker build -t $$ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG pipeline/extraction/list_files/
+          docker build -t $ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG pipeline/extraction/list_files/
           docker push $ACCAUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/$ECR_REPOSITORY:latest
       - name: Update AWS Lambda function
         id: update-function
