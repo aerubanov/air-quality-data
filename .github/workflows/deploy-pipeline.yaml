@@ -88,6 +88,16 @@ jobs:
       TRANSFORMATION_BUCKET: ${{ secrets.TRANSFORMATION_BUCKET }}
       STEP_FUNCTION_BUCKET: ${{ secrets.STEP_FUNCTION_BUCKET }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+    needs:
+      - DeployIndexer
+      - DeployListFiles
+      - DeployLoader
+      - DeployIndexMarker
+      - DeployLocationProcessor
+      - DeployDataProcessor
+      - DeployFileMover
+      - DeployDimensionLoader
+      - DeployFactLoader
 
   CreateSchema:
     runs-on: ubuntu-latest
