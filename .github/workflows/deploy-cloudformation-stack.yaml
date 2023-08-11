@@ -33,8 +33,8 @@ jobs:
           template: aws/template.yaml
           no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
-            DBUsername = ${{ secrets.DB_USERNAME }},
-            DBPassword = ${{ secrets.DB_PASSWORD }},
-            StagingAreaBucketName = ${{ secrets.STAGING_AREA_BUCKET }},
-            TransformationBucketName = ${{ secrets.TRANSFORMATION_BUCKET }}
-            StepFunctionBucketName = ${{ secrets.STEP_FUNCTION_BUCKET }}
+            DBUsername=${{ secrets.DB_USERNAME }},
+            DBPassword=${{ secrets.DB_PASSWORD }},
+            StagingAreaBucketName=${{ secrets.STAGING_AREA_BUCKET }},
+            TransformationBucketName=${{ secrets.TRANSFORMATION_BUCKET }}
+            StepFunctionBucketName=${{ secrets.STEP_FUNCTION_BUCKET }}
