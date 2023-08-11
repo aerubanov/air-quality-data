@@ -7,7 +7,7 @@ Resources:
     Properties:
       StateMachineName: ETLStepFunction
       DefinitionS3Location:
-        Bucket: !REf StepFunctionBucketName
+        Bucket: !Ref StepFunctionBucketName
         Key: StepFunction.asl.json
       RoleArn: !GetAtt StepFunctionRole.Arn
       StateMachineType: STANDARD
