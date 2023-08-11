@@ -7,6 +7,23 @@ on:
       - 'aws/template.yaml'
   workflow_dispatch:
   workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      DB_USERNAME:
+        required: true
+      DB_PASSWORD:
+        required: true
+      STAGING_AREA_BUCKET:
+        required: true
+      TRANSFORMATION_BUCKET:
+        required: true
+      STEP_FUNCTION_BUCKET:
+        required: true
 
 jobs:
   deploy:
