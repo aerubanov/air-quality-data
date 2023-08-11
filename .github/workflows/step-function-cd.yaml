@@ -8,13 +8,14 @@ on:
       - 'aws/StepFunction.asl.json'
   workflow_dispatch:
 
-env:
-  ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-  REGION: ${{ env.AWS_REGION }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+      REGION: ${{ env.AWS_REGION }}
+
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials

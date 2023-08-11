@@ -9,14 +9,15 @@ on:
   workflow_dispatch:
   workflow_call:
 
-env:
-  ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-  REGION: ${{ env.AWS_REGION }}
-  ECR_REPOSITORY: loader
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+      REGION: ${{ env.AWS_REGION }}
+      ECR_REPOSITORY: loader
+
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
