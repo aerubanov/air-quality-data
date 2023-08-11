@@ -1,0 +1,36 @@
+name: Loading step dimension-loader AWS Lambda CD
+run-name: Deploy dimension-loader lambda
+on: 
+  push:
+    branches:
+      - main
+    paths:
+      - 'pipeline/loading/dimension_loading/**'
+  workflow_dispatch:
+env:
+  ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+  REGION: ${{ env.AWS_REGION }}
+  ECR_REPOSITORY: dimension-loader
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: $REGION
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        run: |
+          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/loading/dimension_loading/
+          docker push $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - name: Update AWS Lambda function
+        id: update-function
+        run: |
+          aws lambda update-function-code --function-name dimension-loader --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
