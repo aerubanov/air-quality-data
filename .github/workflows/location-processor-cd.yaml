@@ -1,17 +1,17 @@
-name: Extraction step loader AWS Lambda CD
-run-name: Deploy loader lambda
-on: 
+name: Transformation step location-processor AWS Lambda CD
+run-name: Deploy location-processor lambda
+on:
   push:
     branches:
       - main
     paths:
-      - 'pipeline/extraction/list_files/**'
+      - 'pipeline/transformation/process_location/**'
   workflow_dispatch:
 
 env:
   ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
   REGION: ${{ env.AWS_REGION }}
-  ECR_REPOSITORY: loader
+  ECR_REPOSITORY: location-processor
 
 jobs:
   build:
@@ -30,9 +30,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/extraction/loader/
+          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/transformation/process_location/
           docker push $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
       - name: Update AWS Lambda function
         id: update-function
         run: |
-          aws lambda update-function-code --function-name loader --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          aws lambda update-function-code --function-name location-processor --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
