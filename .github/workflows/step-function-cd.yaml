@@ -25,4 +25,4 @@ jobs:
           sed -i "s/eu-central-1/${{ secrets.AWS_REGION }}/g" aws/StepFunction.asl.json
       - name: Update Step Function
         run: |
-          aws stepfunctions update-state-machine --state-machine-arn arn:aws:states:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:stateMachine:StepFunction --definition file://aws/StepFunction.asl.json
+          aws stepfunctions update-state-machine --state-machine-arn arn:aws:states:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:stateMachine:ETLStepFunction --definition file://aws/StepFunction.asl.json
