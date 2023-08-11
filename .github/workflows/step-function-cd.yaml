@@ -11,7 +11,6 @@ on:
 env:
   ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
   REGION: ${{ env.AWS_REGION }}
-  BUCKET_NAME: ${{ env.STEP_FUNCTION_BUCKET_NAME }}
 
 jobs:
   build:
