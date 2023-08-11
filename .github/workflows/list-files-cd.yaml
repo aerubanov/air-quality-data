@@ -26,7 +26,7 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t ${{ secretsAWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/list-files:latest pipeline/extraction/list_files/
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/list-files:latest pipeline/extraction/list_files/
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/list-files:latest
       - name: Update AWS Lambda function
         id: update-function
