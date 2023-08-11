@@ -24,6 +24,8 @@ on:
         required: true
       STEP_FUNCTION_BUCKET:
         required: true
+      AWS_ACCOUNT_ID:
+        required: true
 
 jobs:
   deploy:
