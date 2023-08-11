@@ -31,4 +31,4 @@ jobs:
       - name: Update AWS Lambda function
         id: update-function
         run: |
-          aws lambda update-function-code --function-name list-files --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$REGION.amazonaws.com/list-files:latest
+          aws lambda update-function-code --function-name list-files --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/list-files:latest
