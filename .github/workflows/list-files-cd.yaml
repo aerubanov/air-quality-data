@@ -7,6 +7,7 @@ on:
     paths:
       - 'pipeline/extraction/list_files/**'
   workflow_dispatch:
+  workflow_call:
 
 env:
   ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}

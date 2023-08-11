@@ -6,6 +6,7 @@ on:
     paths:
       - 'aws/template.yaml'
   workflow_dispatch:
+  workflow_call:
 
 env:
   ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
