@@ -1,18 +1,18 @@
-name: Extraction step list-files AWS Lambda CD
-run-name: Deploy list-files lambda
+name: Loading step dimension-loader AWS Lambda CD
+run-name: Deploy dimension-loader lambda
 on: 
   push:
     branches:
       - main
     paths:
-      - 'pipeline/extraction/list_files/**'
+      - 'pipeline/loading/dimension_loading/**'
   workflow_dispatch:
   workflow_call:
 
 env:
   ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
   REGION: ${{ env.AWS_REGION }}
-  ECR_REPOSITORY: list-files
+  ECR_REPOSITORY: dimension-loader
 
 jobs:
   build:
@@ -31,9 +31,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/extraction/list_files/
+          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/loading/dimension_loading/
           docker push $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
       - name: Update AWS Lambda function
         id: update-function
         run: |
-          aws lambda update-function-code --function-name list-files --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          aws lambda update-function-code --function-name dimension-loader --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
