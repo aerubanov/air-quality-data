@@ -12,12 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-      REGION: ${{ env.AWS_REGION }}
-      ECR_REPOSITORY: loader
-
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
@@ -25,16 +19,16 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: $REGION
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/extraction/loader/
-          docker push $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/loader:latest pipeline/extraction/loader/
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/loader:latest
       - name: Update AWS Lambda function
         id: update-function
         run: |
-          aws lambda update-function-code --function-name loader --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          aws lambda update-function-code --function-name loader --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/loader:latest

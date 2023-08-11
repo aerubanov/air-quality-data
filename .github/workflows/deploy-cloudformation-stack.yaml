@@ -11,11 +11,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-      REGION: ${{ env.AWS_REGION }}
-
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
@@ -26,11 +21,11 @@ jobs:
           aws-region: $REGION
       - name: Replace account_id and region
         run: |
-          sed -i "s/307660119800/${ACCOUNT_ID}/g" aws/StepFunction.asl.json
-          sed -i "s/eu-central-1/${REGION}/g" aws/StepFunction.asl.json
+          sed -i "s/307660119800/${{ secrets.AWS_ACCOUNT_ID }}/g" aws/StepFunction.asl.json
+          sed -i "s/eu-central-1/${{ secrets.AWS_REGION }}/g" aws/StepFunction.asl.json
       - name: Upload step function defenition to S3
         run: |
-          aws s3 cp aws/StepFunction.asl.json s3://${{ env.STEP_FUNCTION_BUCKET }}/
+          aws s3 cp aws/StepFunction.asl.json s3://${{ secrets.STEP_FUNCTION_BUCKET }}/
       - name: Deploy CloudFormation stack
         uses: aws-actions/aws-cloudformation-github-deploy@master
         with:
@@ -40,6 +35,6 @@ jobs:
           parameter-overrides: >-
             DBUsername = ${{ secrets.DB_USERNAME }},
             DBPassword = ${{ secrets.DB_PASSWORD }},
-            StagingAreaBucketName = ${{ env.STAGING_AREA_BUCKET }},
-            TransformationBucketName = ${{ env.TRANSFORMATION_BUCKET }}
-            StepFunctionBucketName = ${{ env.STEP_FUNCTION_BUCKET }}
+            StagingAreaBucketName = ${{ secrets.STAGING_AREA_BUCKET }},
+            TransformationBucketName = ${{ secrets.TRANSFORMATION_BUCKET }}
+            StepFunctionBucketName = ${{ secrets.STEP_FUNCTION_BUCKET }}

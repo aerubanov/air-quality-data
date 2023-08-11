@@ -11,11 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-      REGION: ${{ env.AWS_REGION }}
-
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
@@ -23,11 +18,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: $REGION
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: Replace account_id and region
         run: |
-          sed -i "s/307660119800/${ACCOUNT_ID}/g" aws/StepFunction.asl.json
-          sed -i "s/eu-central-1/${REGION}/g" aws/StepFunction.asl.json
+          sed -i "s/307660119800/${{ secrets.AWS_ACCOUNT_ID }}/g" aws/StepFunction.asl.json
+          sed -i "s/eu-central-1/${{ secrets.AWS_REGION }}/g" aws/StepFunction.asl.json
       - name: Update Step Function
         run: |
-          aws stepfunctions update-state-machine --state-machine-arn arn:aws:states:${REGION}:${ACCOUNT_ID}:stateMachine:StepFunction --definition file://aws/StepFunction.asl.json
+          aws stepfunctions update-state-machine --state-machine-arn arn:aws:states:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:stateMachine:StepFunction --definition file://aws/StepFunction.asl.json

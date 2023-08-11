@@ -12,12 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    env:
-      ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-      REGION: ${{ env.AWS_REGION }}
-      ECR_REPOSITORY: file-mover
-    
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
@@ -32,9 +26,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest pipeline/transformation/move_files/
-          docker push $ACCAUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$REGION.amazonaws.com/file-mover:latest pipeline/transformation/move_files/
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$REGION.amazonaws.com/file-mover:latest
       - name: Update AWS Lambda function
         id: update-function
         run: |
-          aws lambda update-function-code --function-name file-mover --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          aws lambda update-function-code --function-name file-mover --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$REGION.amazonaws.com/file-mover:latest
