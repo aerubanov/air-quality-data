@@ -1,4 +1,4 @@
-# air-quality-data
+# Air-quality-data
 Serverless ETL pipeline and OLAP database for air quality data analitics based on AWS cloud 
 
 ## Intoduction
@@ -13,3 +13,29 @@ air quality data analitics.
 
 We use star schema for the database with 2 fact tables (concentration and temperature) to store measurements from sensors and 3 dimension tables. P1 and P2 are pm2.5 and pm10 particles concentration. Sensor_type store type of sensor (like 'bme289' or 'sds011'), is_indoor indicates when the sensor is install inside a room. We get address information from sensor lat and long using [
 Nominatim](https://nominatim.org/) API.
+
+## Pipeline
+![pipeline](docs/stepfunctions_graph.svg)
+
+Our data processing pipeline is built from the AWS Lambda function orchestrated by AWS StepFunction. Input for step function should specify a date interval for data downloading:
+``` json
+{
+  "startDate": "2022-03-01",
+  "endDate": "2022-03-02"
+}
+```
+### Extraction
+Steps:
+- select folders with files to download based on dates and put them into the DynamoDB table;
+- for each folder get and filter a list of files to download, and save a list of files on S3;
+- download data files into staging-area S3 bucket;
+- mark folder in DynamoDB as processed;
+### Transformation
+Iterate over all new files (with batching) in the staging area and:
+- extract location information (lat, lon), request Nomination API to get location details;
+- extract sensor type;
+- extract measurements, filter for empty and unrealistic values, average within 1 hour;
+for each batch write results into files in the transformed bucket and move processed files to another folder in the staging area bucket.
+### Loading
+- read files with sensor, time, and location info from the transformed bucket and upload data into dimension tables, and remove processed files from the transformed bucket;
+- read files with concentration and temperature data and load it into fact tables, and remove processed files from the transformed bucket;
