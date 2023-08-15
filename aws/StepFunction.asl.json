@@ -312,9 +312,9 @@
                   "Mode": "DISTRIBUTED",
                   "ExecutionType": "EXPRESS"
                 },
-                "StartAt": "Lambda Invoke",
+                "StartAt": "Load Sensors",
                 "States": {
-                  "Lambda Invoke": {
+                  "Load Sensors": {
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "OutputPath": "$.Payload",
@@ -365,9 +365,9 @@
                   "Mode": "DISTRIBUTED",
                   "ExecutionType": "EXPRESS"
                 },
-                "StartAt": "Lambda Invoke (1)",
+                "StartAt": "Load Time",
                 "States": {
-                  "Lambda Invoke (1)": {
+                  "Load Time": {
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "OutputPath": "$.Payload",
@@ -418,9 +418,9 @@
                   "Mode": "DISTRIBUTED",
                   "ExecutionType": "EXPRESS"
                 },
-                "StartAt": "Lambda Invoke (2)",
+                "StartAt": "Load Location",
                 "States": {
-                  "Lambda Invoke (2)": {
+                  "Load Location": {
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "OutputPath": "$.Payload",
@@ -477,9 +477,9 @@
                   "Mode": "DISTRIBUTED",
                   "ExecutionType": "EXPRESS"
                 },
-                "StartAt": "Lambda Invoke (3)",
+                "StartAt": "Load Temperature",
                 "States": {
-                  "Lambda Invoke (3)": {
+                  "Load Temperature": {
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "OutputPath": "$.Payload",
@@ -527,9 +527,9 @@
                   "Mode": "DISTRIBUTED",
                   "ExecutionType": "EXPRESS"
                 },
-                "StartAt": "Lambda Invoke (4)",
+                "StartAt": "Load Concentration",
                 "States": {
-                  "Lambda Invoke (4)": {
+                  "Load Concentration": {
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "OutputPath": "$.Payload",
