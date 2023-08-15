@@ -50,3 +50,19 @@ The following AWS services uses:
 - Step Functions - to orchestrate lambda functions;
 - Aurora - host serverless PostgreSQL cluster;
 - CloudFormation - other services configuration and deployment;
+
+## Deployment
+If you want to run this aplication in your own AWS cloud you need to do few steps:
+1. Fork repository.
+2. Set apropriate value for following Github repository secrets (`Settings -> Secrets and Variables -> Actions`):
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `AWS_ACCOUNT_ID`
+  - `AWS_REGION`
+  - `DB_PASSWORD` - password for Aurora PostgreSQL cluster 
+  - `DB_USERNAME` - username for Aurora PostgreSQL cluster
+  - `STAGING_AREA_BUCKET` - bucket name for raw data files
+  - `TRANSFORMATION_BUCKET` - bucket name for transformed data
+  - `STEP_FUNCTION_BUCKET` - bucket name for step function defenition uploading during deployment
+3. Go to `Actions -> Deploy ETL pipeline` and press run worflow button. It will build docker images for Lambda functions, push them to ECR, and deploy CloudFormation stack.
+4. After deployment you need go to your AWS StepFunction console and run execution of ETLStepFunction/
