@@ -39,3 +39,14 @@ for each batch write results into files in the transformed bucket and move proce
 ### Loading
 - read files with sensor, time, and location info from the transformed bucket and upload data into dimension tables, and remove processed files from the transformed bucket;
 - read files with concentration and temperature data and load it into fact tables, and remove processed files from the transformed bucket;
+
+## Resources
+![resources](docs/resources.png)
+
+The following AWS services uses:
+- S3 - to store raw and transformed files;
+- DynamoDB - to track which data downloaded;
+- Lambda Functions - to perform computations;
+- Step Functions - to orchestrate lambda functions;
+- Aurora - host serverless PostgreSQL cluster;
+- CloudFormation - other services configuration and deployment;
