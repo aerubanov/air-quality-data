@@ -4,23 +4,25 @@ import os
 
 data_dir = '/tmp/data/'
 base_url = 'https://archive.sensor.community/'
+if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
     bucket_name = event["ResultWriterDetails"]["Bucket"]
     key = event["ResultWriterDetails"]["Key"]
     filenale = key.split("/")[-1]
-    bucket = boto3.resource("s3").Bucket(bucket_name)
-    if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
 
+    bucket = boto3.resource("s3").Bucket(bucket_name)
     bucket.download_file(key, data_dir + filenale)
     with open(data_dir + filenale, "r") as f:
         data = json.load(f)
     os.remove(data_dir + filenale)
+
     if data['ResultFiles']["FAILED"] != []:
+        # Data is not processed correctly
         return
+    
     succeded = data['ResultFiles']["SUCCEEDED"][0]['Key']
     filename = succeded.split("/")[-1]
 
@@ -28,6 +30,7 @@ def handler(event, context):
     with open(data_dir + filename, "r") as f:
         data = json.load(f)
     os.remove(data_dir + filename)
+    
     input = json.loads(data[0]['Input'])
     link = input['Items'][0]
     filename = link.split("/")[-1]
@@ -56,6 +59,7 @@ def mark_folder(folder: str):
     print(f"Marked folder {folder} as processed")
     
 def clear_file_list(folder, bucket_name):
+    """Remove file list from S3 (temporal file)"""
     prefix = "file_list/"
     bucket = boto3.resource("s3").Bucket(bucket_name)
     bucket.delete_objects(
@@ -68,12 +72,3 @@ def clear_file_list(folder, bucket_name):
         }
     )
     print(f"file-list for {folder} removed")
-
-if __name__ == "__main__":
-    event = {
-        'ResultWriterDetails': {
-            'Bucket': 'staging-area-bucket',
-            'Key': 'map-output//39539b6e-74cc-3336-a85d-f85c949551bb/manifest.json'
-        }
-    }
-    handler(event, None)

@@ -41,6 +41,7 @@ def handler(event, context):
 
 
 def get_folders_list():
+    """Get list of folders from DynamoDB"""
     response = folders_table.scan()
     data = response['Items']
 
@@ -51,6 +52,7 @@ def get_folders_list():
 
 
 def get_links():
+    """Get list of folders avialible in data source"""
     resp = httpx.get(base_url, headers=headers, timeout=120)
     print(resp.status_code)
     soup = BeautifulSoup(resp.text, 'lxml')
@@ -89,23 +91,14 @@ def build_index(start_date: datetime.datetime, end_date: datetime.datetime):
 
 
 def check_link(link: str, start_date: datetime.datetime, end_date: datetime.datetime) -> bool:
-    "check link format"
+    "check link format and filter by date"
     if link_pattern.match(link):
         date = datetime.datetime.strptime(link.replace('/', ''), "%Y-%m-%d")
     elif nested_link_pattern.match(link):
         date = datetime.datetime.strptime(link.split('/')[1], "%Y-%m-%d")
     else:
         return False
-    # download data only for March
     if date < start_date or date > end_date:
         return False
 
     return True
-
-
-if __name__ == "__main__":
-    handler({
-        "startDate": "2022-03-01",
-        "endDate": "2022-03-31",
-    },
-    None)
