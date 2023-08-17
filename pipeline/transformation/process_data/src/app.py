@@ -1,6 +1,8 @@
 import os
 import boto3
 import pandas as pd
+from pandas.util import hash_pandas_object
+import hashlib
 import datetime
 from typing import Tuple
 import botocore
@@ -20,8 +22,6 @@ if not os.path.exists(data_dir):
 
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
     fact_list, time_list = [], []
     for item in event["Items"]:
         filename = item['Key'].split('/')[-1]
@@ -39,6 +39,7 @@ def handler(event, context):
 
 
 def get_s3_file_data(filename: str) -> pd.DataFrame:
+    """Get data from s3 and return a dataframe"""
     source_bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
     df = pd.read_csv(os.path.join(data_dir, filename), parse_dates=['timestamp'], sep=';')
     os.remove(os.path.join(data_dir, filename))
@@ -46,6 +47,7 @@ def get_s3_file_data(filename: str) -> pd.DataFrame:
 
 
 def filter_messurements(df: pd.DataFrame) -> pd.DataFrame:
+    """Filter out measurements that are too cold or too hot"""
     # filter temperature columns if present
     if 'temperature' in df.columns:
         df.drop(df[df['temperature'] > 60].index, inplace=True)
@@ -76,6 +78,7 @@ def filter_messurements(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def extract_data(df: pd.DataFrame) -> Tuple[pd.DataFrame]:
+    """Select columns, filter, and resample data. Extract time data and fact data"""
     df = df[[col for col in df.columns if col in data_colums]]
     for col in df.columns:
         if col in numeric_columns:
@@ -109,15 +112,16 @@ def extract_data(df: pd.DataFrame) -> Tuple[pd.DataFrame]:
     
 
 def write_data_to_s3(data: pd.DataFrame) -> str:
+    """Write csv files with fact data to s3. Use hash as filename."""
     prefix = 'concentration/' if 'P1' in data.columns else 'temperature/'
-    date = data.index[0].date()
-    sensor_id = data['sensor_id'].iloc[0]
-    data.to_csv(os.path.join(data_dir, f'{date}_{sensor_id}.csv'), index=False)
-    target_bucket.upload_file(os.path.join(data_dir, f'{date}_{sensor_id}.csv'), prefix+f'{date}_{sensor_id}.csv')
-    os.remove(os.path.join(data_dir, f'{date}_{sensor_id}.csv'))
-    return prefix+f'{date}_{sensor_id}.csv'
+    filename = hashlib.sha256(pd.util.hash_pandas_object(data, index=False).values).hexdigest()
+    data.to_csv(os.path.join(data_dir, f'{filename}.csv'), index=False)
+    target_bucket.upload_file(os.path.join(data_dir, f'{filename}.csv'), prefix+f'{filename}.csv')
+    os.remove(os.path.join(data_dir, f'{filename}.csv'))
+    return prefix+f'{filename}.csv'
 
 def write_time_to_s3(data: pd.DataFrame) -> str:
+    """Write csv files with time data to s3. If file already exists, skip it."""
     prefix = 'time/'
     data = data.drop_duplicates()
     columns = data.columns
@@ -148,13 +152,3 @@ def check_s3_file_exist(filename: str, prefix: str) -> bool:
             # Something else has gone wrong.
             raise
     return True
-
-
-if __name__ == "__main__":
-    data = get_s3_file_data('2023-03-01_bme280_sensor_10006.csv')
-    print(data.head())
-    fact_df, time_df = extract_data(data)
-    print(fact_df)
-    print(time_df)
-    #write_time_to_s3(time_df)
-    #write_data_to_s3(fact_df)
