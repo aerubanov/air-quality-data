@@ -39,6 +39,7 @@ def select_loading_function(prefix: str) -> Callable:
 
 
 def read_data(filename: str, prefix: str) -> dict:
+    """Read data from s3 and return a dictionary"""
     bucket.download_file(prefix+'/'+filename, os.path.join(data_dir, filename))
     # read header and values from data file
     with open(os.path.join(data_dir, filename), 'r') as f:
@@ -47,34 +48,9 @@ def read_data(filename: str, prefix: str) -> dict:
     os.remove(os.path.join(data_dir, filename))
     header = header.replace('\n', '').split(',')
     values = values.replace('\n', '').split(',')
-    print(header)
-    print(values)
     return dict(zip(header, values))
 
 
 def remove_s3_files(keys: list[str]) -> None:
     delete = {"Objects": [{"Key": key} for key in keys]}
     bucket.delete_objects(Delete=delete)
-    
-
-
-if __name__ == "__main__":
-    event = {
-    "Items": [
-    {
-      "Etag": "\"d300b278468dfe529c5ef02050edbc04\"",
-      "Key": "locations/10510.csv",
-      "LastModified": 1685463282,
-      "Size": 153,
-      "StorageClass": "STANDARD"
-    },
-    {
-      "Etag": "\"4fc44a21ed1c4a12582934d40a127d5e\"",
-      "Key": "locations/12223.csv",
-      "LastModified": 1685463279,
-      "Size": 135,
-      "StorageClass": "STANDARD"
-    },
-    ]}
-    handler(event, None)
-    

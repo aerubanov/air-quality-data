@@ -20,10 +20,8 @@ headers = {
 }
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
+    """Create file with data downloading links"""
     link = event["folder"]["S"]
-    print(link)
     data_object = link[:-1]+".json"
     files = list_files(link)
     path = data_dir+"/".join(data_object.split("/")[:-1])
@@ -56,11 +54,3 @@ def list_files(link):
     links = [item.get('href') for item in soup.find_all('a')]
     files = [item for item in links if '.csv' in item]
     return [url+file for file in files]
-
-
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--folder', type=str, required=True)
-    args = parser.parse_args()
-    print(list_files(args.folder))

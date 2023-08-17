@@ -47,14 +47,11 @@ def process_in_threads(data: list, func: callable, n_threads: int) -> list:
 
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
-    #for link in event["Items"]:
-    #    load_file(link)
     process_in_threads(event["Items"], load_file, 8)
 
 
 def validate_data(data: list) -> bool:
+    """Validate data (check for columns)"""
     columns = ['sensor_id', 'timestamp', 'lat', 'lon', 'location', 'timestamp', 'sensor_type']
     header = data.split("\n")[0]
     header = header.split(";")
@@ -87,18 +84,3 @@ def load_file(link: str):
         raise e
     finally:
         os.remove(path)
-
-
-
-if __name__ == "__main__":
-    #load_file("https://archive.sensor.community/2016-10-102016-10-10_sds011_sensor_183.csv")
-    load_file('https://archive.sensor.community/2022/2022-01-01/2022-01-01_sps30_sensor_68925.csv')
-    event = {
-        "Items": [
-            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79564.csv",
-            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79576.csv",
-            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79588.csv",
-            "https://archive.sensor.community/2023-04-09/2023-04-09_sps30_sensor_79685.csv"
-        ]
-    }
-    handler(event, None)
