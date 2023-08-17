@@ -34,6 +34,7 @@ def select_loading_function(prefix: str) -> Callable:
 
 
 def read_data(prefix: str, filename: str) -> list[dict]:
+    """Read data from s3 and return a list of dictionaries"""
     bucket.download_file(prefix+'/'+filename, os.path.join(data_dir, filename))
     # read header and values from data file
     with open(os.path.join(data_dir, filename), 'r') as f:
@@ -51,14 +52,3 @@ def read_data(prefix: str, filename: str) -> list[dict]:
 def remove_s3_file(key: str) -> None:
     delete = {"Objects": [{"Key": key}]}
     bucket.delete_objects(Delete=delete)
-
-
-if __name__ == "__main__":
-    event = {
-        "Etag": "\"9fdcbe668473e764098ac7a00de10054\"",
-        "Key": "temperature/2023-03-01_67103.csv",
-        "LastModified": 1687196776,
-        "Size": 78666,
-        "StorageClass": "STANDARD"
-    }
-    handler(event, None)
