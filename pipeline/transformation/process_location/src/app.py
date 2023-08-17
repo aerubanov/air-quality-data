@@ -21,8 +21,6 @@ tf = TimezoneFinder()
 
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
     for item in event["Items"]:
         filename = item['Key'].split('/')[-1]
         *cord, location_id = get_coord(filename)
@@ -60,6 +58,7 @@ def check_s3_file_exist(filename: str, prefix: str) -> bool:
 
 
 def get_coord(filename: str) -> tuple:
+    """Get cordinate and location_id from first row of csv file based on header"""
     source_bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
     # read first two lines from csv file
     with open(os.path.join(data_dir, filename), 'r') as f:
@@ -79,6 +78,7 @@ def get_coord(filename: str) -> tuple:
 
 
 def get_sensor_info(filename: str) -> dict:
+    """Get sensor_id and sensor_type from first row of csv file based on header"""
     source_bucket.download_file(prefix+filename, os.path.join(data_dir, filename))
     with open(os.path.join(data_dir, filename), 'r') as f:
         data = f.readlines()
@@ -99,6 +99,7 @@ def get_sensor_info(filename: str) -> dict:
 
 
 def get_location_info(latitude: float, longitude: float):
+    """Get city, state, country, country_code, zipcode from geopy"""
     geolocator = geopy.geocoders.Nominatim(user_agent='air-data-pipline')
     error_count = 0
     while True:
@@ -133,6 +134,9 @@ def get_timezone(latitude: float, longitude: float):
     return tf.timezone_at(lng=longitude, lat=latitude)
 
 def write_location_data_to_s3(location_id, timezone, data):
+    if check_s3_file_exist(f"{location_id}.csv", target_prefix_locations):
+        print(f"Location file: {location_id}.csv already exists")
+        return
     with open(os.path.join(data_dir, f'{location_id}.csv'), 'w') as f:
         f.write('location_id,latitude,longitude,city,state,country,country_code,zipcode,timezone\n')
         f.write(f'{location_id},{data["latitude"]},{data["longitude"]},{data["city"]},{data["state"]},{data["country"]},{data["country_code"]},{data["zipcode"]},{timezone}\n')
@@ -140,42 +144,11 @@ def write_location_data_to_s3(location_id, timezone, data):
     os.remove(os.path.join(data_dir, f'{location_id}.csv'))
 
 def write_sensor_data_to_s3(sensor_info:dict):
+    if check_s3_file_exist(f"{sensor_info['sensor_id']}.csv", target_prefix_sensors):
+        print(f"Sensor file: {sensor_info['sensor_id']}.csv already exists")
+        return
     with open(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'), 'w') as f:
         f.write('sensor_id,sensor_type,is_indoor\n')
         f.write(f'{sensor_info["sensor_id"]},{sensor_info["sensor_type"]},{sensor_info["is_indoor"]}\n')
     target_bucket.upload_file(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'), target_prefix_sensors+f'{sensor_info["sensor_id"]}.csv')
     os.remove(os.path.join(data_dir, f'{sensor_info["sensor_id"]}.csv'))
-
-
-if __name__ == "__main__":
-    event = {
-    "Items": [
-    {
-      "Etag": "\"f286931bc6cd2edb6c8fb21ddb2fa5d8\"",
-      "Key": "files/new/2023-04-09_pms7003_sensor_79683.csv",
-      "LastModified": 1690631451,
-      "Size": 25097,
-      "StorageClass": "STANDARD"
-    },
-    {
-      "Etag": "\"8deb7fa7bed6cc3770647f6ce5642c0c\"",
-      "Key": "files/new/2023-04-09_ppd42ns_sensor_107.csv",
-      "LastModified": 1690631452,
-      "Size": 15424,
-      "StorageClass": "STANDARD"
-    },
-    {
-      "Etag": "\"8bebee410455b10e9e36432f140d4644\"",
-      "Key": "files/new/2023-04-09_radiation_sbm-19_sensor_46386.csv",
-      "LastModified": 1690631452,
-      "Size": 115271,
-      "StorageClass": "STANDARD"
-    }
-    ] 
-    }
-    handler(event, None)
-    # *coord, location_id = get_coord('2023-03-01_bme280_sensor_10006.csv')
-    # print(coord)
-    # print(location_id)
-    # print(get_location_info(*coord))
-    # print(get_timezone(*coord))
