@@ -1,5 +1,5 @@
 # Air-quality-data
-Serverless ETL pipeline and OLAP database for air quality data analitics based on AWS cloud 
+Serverless ETL pipeline and OLAP database for air quality data analytics based on AWS cloud
 
 ## Intoduction
 [Sensor.Community](https://sensor.community/en/) build, deploy and collect data from air quality sensors.
