@@ -61,12 +61,26 @@ def validate_data(data: list) -> bool:
             return False
     return True
 
+def exp_request(url, headers):
+    """Request with exponential retries"""
+    import time
+    timout = 60
+    delay = 10
+    for i in range(5):
+        try:
+            response = httpx.get(url, headers=headers, timeout=timout)
+            return response
+        except (httpx.HTTPError):
+            print("httpx exception. Retry")
+            time.sleep(delay)
+            delay = delay * 2
+            timout += 30
 
 def load_file(link: str):
     """
     link like: https://archive.sensor.community/2015-10-01/2015-10-01_ppd42ns_sensor_27.csv
     """
-    resp = httpx.get(link, headers=headers, timeout=120)
+    resp = exp_request(link, headers)
     data = resp.content.decode()
     if not validate_data(data):
         print(f"Invalid data: {link}")

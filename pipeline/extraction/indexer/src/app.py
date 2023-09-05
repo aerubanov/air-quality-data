@@ -39,6 +39,20 @@ def handler(event, context):
     end_date = datetime.datetime.strptime(event["endDate"], "%Y-%m-%d")
     build_index(start_date, end_date)
 
+def exp_request(url, headers):
+    """Request with exponential retries"""
+    import time
+    timout = 60
+    delay = 10
+    for i in range(5):
+        try:
+            response = httpx.get(url, headers=headers, timeout=timout)
+            return response
+        except (httpx.HTTPError):
+            print("httpx exception. Retry")
+            time.sleep(delay)
+            delay = delay * 2
+            timout += 30
 
 def get_folders_list():
     """Get list of folders from DynamoDB"""
@@ -53,14 +67,14 @@ def get_folders_list():
 
 def get_links():
     """Get list of folders avialible in data source"""
-    resp = httpx.get(base_url, headers=headers, timeout=120)
+    resp = exp_request(base_url, headers)
     print(resp.status_code)
     soup = BeautifulSoup(resp.text, 'lxml')
     links = [link.get('href') for link in soup.find_all('a') if link_pattern.match(link.get('href'))]
 
     # get data for previous years
     for folder in nested_folders:
-        resp = httpx.get(base_url + folder, headers=headers, timeout=120)
+        resp = exp_request(base_url + folder, headers)
         print(folder)
         print(resp.status_code)
         soup = BeautifulSoup(resp.text, 'lxml')
@@ -70,8 +84,6 @@ def get_links():
 
 def build_index(start_date: datetime.datetime, end_date: datetime.datetime):
     """Collect file index and upload it on S3. Using multithreading"""
-    resp = httpx.get(base_url, headers=headers, timeout=120)
-    soup = BeautifulSoup(resp.text, 'lxml')
     links = get_links()
     checked_folders=set(get_folders_list())
     links = [i for i in links if i not in checked_folders]
