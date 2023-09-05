@@ -36,6 +36,21 @@ def handler(event, context):
         "Bucket": backet_name,
         }
 
+def exp_request(url, headers):
+    """Request with exponential retries"""
+    import time
+    timout = 60
+    delay = 10
+    for i in range(5):
+        try:
+            response = httpx.get(url, headers=headers, timeout=timout)
+            return response
+        except (httpx.HTTPError):
+            print("httpx exception. Retry")
+            time.sleep(delay)
+            delay = delay * 2
+            timout += 30
+
 
 def list_files(link):
     """
@@ -43,12 +58,7 @@ def list_files(link):
     """
     url = base_url + link
     # load url with retries
-    try:
-        response = httpx.get(url, headers=headers, timeout=20)
-    except (httpx.HTTPError):
-        print("httpx exception. Retry")
-        time.sleep(15)
-        response = httpx.get(url, headers=headers, timeout=120)
+    response = exp_request(url, headers)
 
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     links = [item.get('href') for item in soup.find_all('a')]
