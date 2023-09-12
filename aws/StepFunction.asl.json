@@ -285,7 +285,7 @@
         }
       },
       "Label": "Map",
-      "MaxConcurrency": 10,
+      "MaxConcurrency": 50,
       "ItemReader": {
         "Resource": "arn:aws:states:::s3:listObjectsV2",
         "Parameters": {
@@ -295,7 +295,7 @@
         "ReaderConfig": {}
       },
       "ItemBatcher": {
-        "MaxItemsPerBatch": 100
+        "MaxItemsPerBatch": 200
       },
       "Next": "Dimension Loading"
     },

@@ -41,7 +41,7 @@ Resources:
       FunctionName: indexer
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/indexer:latest'
-      MemorySize: 512
+      MemorySize: 128
       PackageType: Image
       Role: !GetAtt 'DynamoDBLambdaRole.Arn'
       Timeout: 600
@@ -53,7 +53,7 @@ Resources:
       FunctionName: list-files
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/list-files:latest'
-      MemorySize: 512
+      MemorySize: 400
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
       Timeout: 300
@@ -68,7 +68,7 @@ Resources:
       FunctionName: loader
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/loader:latest'
-      MemorySize: 512
+      MemorySize: 300
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 900
@@ -83,7 +83,7 @@ Resources:
       FunctionName: index-marker
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/index-marker:latest'
-      MemorySize: 512
+      MemorySize: 128
       PackageType: Image
       Role: !GetAtt 'DynamoDBS3LambdaRole.Arn'
       Timeout: 60
@@ -366,7 +366,7 @@ Resources:
       FunctionName: data-processor
       Code: 
         ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/data-processor:latest
-      MemorySize: 512
+      MemorySize: 250
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
@@ -382,7 +382,7 @@ Resources:
       FunctionName: location-processor
       Code: 
         ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/location-processor:latest
-      MemorySize: 512
+      MemorySize: 250
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
@@ -398,7 +398,7 @@ Resources:
       FunctionName: file-mover
       Code: 
         ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/file-mover:latest
-      MemorySize: 512
+      MemorySize: 128
       PackageType: Image
       Role: !GetAtt 'S3LambdaRole.Arn'
       Timeout: 600
@@ -506,7 +506,7 @@ Resources:
       FunctionName: fact-loader
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/fact-loader:latest'
-      MemorySize: 512
+      MemorySize: 128
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'
       Timeout: 100
@@ -521,7 +521,7 @@ Resources:
       FunctionName: dimension-loader
       Code: 
         ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dimension-loader:latest'
-      MemorySize: 512
+      MemorySize: 128
       PackageType: Image
       Role: !GetAtt 'S3AuroraRole.Arn'
       Timeout: 100
